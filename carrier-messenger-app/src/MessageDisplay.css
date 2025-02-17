@@ -37,7 +37,6 @@
 .message p {
   margin: 0;
   opacity: 1; /* Set text opacity to 100% */
-  padding-inline: 15px;
 }
 
 .incoming-message {

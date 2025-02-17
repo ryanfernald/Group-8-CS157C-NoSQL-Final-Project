@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './MessageDisplay.css';
-import carrierPigeonLogo from '../public/carrierpigeon-logo.svg';
+import carrierPigeonLogo from './assets/carrierpigeon-logo.svg';
 
 const MessageDisplay = ({ messages, onSendMessage }) => {
   const [newMessage, setNewMessage] = useState('');
@@ -22,13 +22,20 @@ const MessageDisplay = ({ messages, onSendMessage }) => {
     }
   };
 
+  const parseMessage = (text) => {
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold text
+      .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic text
+      .replace(/__(.*?)__/g, '<u>$1</u>'); // Underline text
+  };
+
   return (
     <div className="message-display">
       <img src={carrierPigeonLogo} alt="Carrier Pigeon Logo" className="logo-overlay" />
       <div className="messages">
         {messages.map((message, index) => (
           <div key={index} className={`message ${message.isUser ? 'user-message' : 'incoming-message'}`}>
-            <p>{message.text}</p>
+            <div dangerouslySetInnerHTML={{ __html: parseMessage(message.text) }} />
           </div>
         ))}
       </div>

@@ -61,7 +61,7 @@
 }
 
 .sidebar li:hover, .message-box button:hover {
-  background-color: #5b6eae;
+  background-color: #5a7e88;
 }
 
 .message-display {
@@ -80,6 +80,7 @@
 
 .message {
   margin-bottom: 1rem;
+  padding-inline: 15px;
 }
 
 .message-box {
