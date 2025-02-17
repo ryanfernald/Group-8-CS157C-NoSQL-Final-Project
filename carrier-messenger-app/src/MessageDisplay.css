@@ -37,12 +37,14 @@
 .message p {
   margin: 0;
   opacity: 1; /* Set text opacity to 100% */
+  padding-inline: 15px;
 }
 
 .incoming-message {
   background-color: rgba(209, 209, 209, 0.5); /* Set box opacity to 50% */
   align-self: flex-start;
   max-width: 100%; /* Ensure the message box does not exceed 80% of the container width */
+  margin-right: 40% /* Adjust the margin for better spacing */
 }
 
 .user-message {
@@ -51,6 +53,7 @@
   align-self: flex-end;
   text-align: right; /* Align text to the right */
   max-width: 100%; /* Ensure the message box does not exceed 80% of the container width */
+  margin-left: 40%
 }
 
 .message-box {

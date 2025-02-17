@@ -18,11 +18,12 @@ function App() {
     setSelectedContact(contact);
     // Fetch messages for the selected contact
     setMessages([
-      { text: `Hello ${contact.name}!`, isUser: false },
+      { text: `Hello, this is  ${contact.name}!`, isUser: false },
       { text: 'How are you this fine evening?', isUser: false },
       { text: 'I\'m doing well, thank you!', isUser: true },
       { text: 'I\'m also doing well. How about you?', isUser: false },
       { text: 'I\'m doing great too. Goodnight!', isUser: true },
+      { text: 'This is a long test test test test test test test to see if the message will wrap around. Yes, yes it does, that\'s very nice.', isUser: false },
     ]);
   };
 
