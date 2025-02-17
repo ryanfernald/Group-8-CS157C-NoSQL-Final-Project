@@ -1,0 +1,82 @@
+.message-display {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #6f7074;
+  color: rgb(0, 0, 0);
+  position: relative;
+}
+
+.logo-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.3; /* Adjust the opacity as needed */
+  width: 50%; /* Adjust the size as needed */
+  height: auto;
+  pointer-events: none; /* Ensure the logo does not interfere with interactions */
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+  z-index: 1;
+}
+
+.message {
+  margin-bottom: 0.5rem; /* Reduced margin for more compact messages */
+  padding: 0.5em; /* Reduced padding for more compact messages */
+  border-radius: 10px;
+  word-wrap: break-word; /* Ensure long words break to fit within the box */
+  text-align: left; /* Align text to the left */
+  background-color: rgba(255, 255, 255, 0.5); /* Set box opacity to 50% */
+}
+
+.message p {
+  margin: 0;
+  opacity: 1; /* Set text opacity to 100% */
+}
+
+.incoming-message {
+  background-color: rgba(209, 209, 209, 0.5); /* Set box opacity to 50% */
+  align-self: flex-start;
+  max-width: 100%; /* Ensure the message box does not exceed 80% of the container width */
+}
+
+.user-message {
+  background-color: rgba(114, 137, 218, 0.5); /* Set box opacity to 50% */
+  color: rgb(0, 0, 0);
+  align-self: flex-end;
+  text-align: right; /* Align text to the right */
+  max-width: 100%; /* Ensure the message box does not exceed 80% of the container width */
+}
+
+.message-box {
+  background-color: #596a87;
+  display: flex;
+  padding: 1rem;
+  z-index: 1;
+}
+
+.message-box input {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 4px;
+  margin-right: 0.5rem;
+}
+
+.message-box button {
+  padding: .5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #7289da;
+  color: rgb(0, 0, 0);
+  cursor: pointer;
+}
+
+.message-box button:hover {
+  background-color: #5b6eae;
+}

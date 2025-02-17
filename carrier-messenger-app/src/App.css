@@ -1,0 +1,107 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+.app {
+  display: flex;
+  height: 95vh;
+}
+
+.sidebar, .message-display {
+  padding: 1rem;
+}
+
+.sidebar ul, .message-display .messages {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li, .message {
+  padding: 0.5rem 0;
+  cursor: pointer;
+}
+
+.sidebar li:hover, .message-box button:hover {
+  background-color: #5b6eae;
+}
+
+.message-display {
+  width: 800px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #779ca5;
+  color: rgb(0, 0, 0);
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.message {
+  margin-bottom: 1rem;
+}
+
+.message-box {
+  display: flex;
+  padding: 1rem;
+  background-color: #a6b1c4;
+  color-scheme: white;
+}
+
+.message-box input {
+  flex: 1;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 4px;
+  margin-right: 0.5rem;
+}
+
+.message-box button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #7289da;
+  color: rgb(0, 0, 0);
+  cursor: pointer;
+}
