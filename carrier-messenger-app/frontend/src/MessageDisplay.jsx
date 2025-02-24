@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './MessageDisplay.css';
+import './styling/MessageDisplay.css';
 import carrierPigeonLogo from './assets/carrierpigeon-logo.svg';
 
 const MessageDisplay = ({ messages, onSendMessage }) => {

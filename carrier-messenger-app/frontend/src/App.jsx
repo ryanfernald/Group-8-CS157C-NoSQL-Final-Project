@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import MessageDisplay from './MessageDisplay';
-import './App.css';
-import './Sidebar.css';
-import './MessageDisplay.css';
+import './styling/App.css';
+import './styling/Sidebar.css';
+import './styling/MessageDisplay.css';
 
 function App() {
   const [contacts] = useState([

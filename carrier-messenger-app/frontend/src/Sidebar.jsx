@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './Sidebar.css';
+import './styling/Sidebar.css';
 
 const Sidebar = ({ contacts, onSelectContact, selectedContact }) => {
   const [searchQuery, setSearchQuery] = useState('');
