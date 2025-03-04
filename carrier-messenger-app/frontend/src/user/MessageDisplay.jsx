@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './styling/MessageDisplay.css';
-import carrierPigeonLogo from './assets/carrierpigeon-logo.svg';
+import carrierPigeonLogo from '../assets/carrierpigeon-logo.svg';
 
 const MessageDisplay = ({ messages, onSendMessage }) => {
   const [newMessage, setNewMessage] = useState('');
