@@ -5,6 +5,7 @@ import uiIcon from "../assets/ui-icon.gif";
 import profileIcon from "../assets/profile-icon.gif";
 import dataIcon from "../assets/data-icon.gif";
 import personIcon from "../assets/person-icon.gif";
+import carrierPigeonLogo from "../assets/carrierpigeon-logo.svg";
 
 const LandingPage = () => {
   return (
@@ -22,7 +23,7 @@ const LandingPage = () => {
         </div>
         <div className="feature">
           <img src={profileIcon} alt="Profile Icon" />
-          <p>Customize your user profile</p>
+          <p>Customize your User Profile</p>
         </div>
         <div className="feature">
           <img src={dataIcon} alt="Data Icon" />
@@ -36,6 +37,7 @@ const LandingPage = () => {
       
       {/* Right Side - Login Form */}
       <div className="login-section">
+        <img src={carrierPigeonLogo} alt="Carrier Pigeon Logo" className="logo" />
         <h2>Login</h2>
         <input type="text" placeholder="Username" className="input-field" />
         <input type="password" placeholder="Password" className="input-field" />

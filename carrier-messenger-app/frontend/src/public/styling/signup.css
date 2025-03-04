@@ -3,7 +3,8 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #f0f2f5;
+    padding: 3rem;
+    background: linear-gradient(to right, #c3c4df, #85c6dc);
 }
 
 .signup-box {
@@ -11,8 +12,7 @@
     padding: 2rem;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 400px;
+    width: 600px;
     text-align: center;
 }
 
@@ -35,7 +35,7 @@
 }
 
 .form-group input {
-    width: 100%;
+    width: 95%;
     padding: 0.75rem;
     border: 1px solid #cccccc;
     border-radius: 5px;
@@ -48,7 +48,7 @@
     padding: 0.75rem;
     border: none;
     border-radius: 5px;
-    background-color: #4CAF50;
+    background-color: #4c99af;
     color: #ffffff;
     font-size: 1rem;
     cursor: pointer;
@@ -56,5 +56,5 @@
 }
 
 .signup-button:hover {
-    background-color: #45a049;
+    background-color: #296772;
 }
