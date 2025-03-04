@@ -21,8 +21,6 @@ function App() {
           
           {/* User Pages (Require Login) */}
           <Route path='/messages' element={<Main />} />
-          <Route path='/sidebar' element={<Sidebar />} />
-          <Route path='/message-display' element={<MessageDisplay />} />
         
         </Routes>
       </Router>
