@@ -1,4 +1,6 @@
 .sidebar {
+    display: flex;
+    flex-direction: column;
     width: 250px;
     background-color: #7d839d; /* Darker background for modern look */
     color: #000000; /* Light text color for contrast */
@@ -23,9 +25,10 @@
   }
   
   .sidebar ul {
+    flex: 1;
     list-style: none;
     padding: 0;
-    
+    overflow-y: auto;
   }
   
   .sidebar li {
@@ -40,5 +43,29 @@
   
   .sidebar li.active {
     background-color: #9ebbb1; /* Slightly lighter active color */
+  }
+
+  .profile-mini {
+    display: flex;
+    margin-top: auto;
+    align-items: center;
+    padding: 10px;
+    background-color: #7d839d; /* Darker background for modern look */
+    color: white; /* Light text color for contrast */
+    cursor: pointer;
+    border-top: 1px solid #6b7280; /* Border for separation */
+  }
+  .profile-mini:hover {
+    background-color: #6b7280; /* Darker hover color */
+  }
+  .profile-mini-photo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+  }
+  .profile-mini-username {
+    font-size: 1rem;
+    font-weight: bold;
   }
   

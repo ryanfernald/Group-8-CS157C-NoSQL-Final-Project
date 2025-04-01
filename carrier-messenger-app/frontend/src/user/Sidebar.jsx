@@ -1,13 +1,26 @@
 import React, { useState } from 'react';
 import './styling/Sidebar.css';
+import ProfileMini from './profile_mini';
+import ProfileFull from './profile_full';
 
 const Sidebar = ({ contacts, onSelectContact, selectedContact }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [showProfile, setShowProfile] = useState(false);
 
-  // Filter contacts based on search query
+  // User object with default profile photo
+  const [user, setUser] = useState({
+    username: 'JohnDoe',
+    profilePhoto: null, // Will be set to a default photo in ProfileFull
+  });
+
   const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleSaveProfile = (updatedUser) => {
+    setUser(updatedUser); // Update the user object with the new data
+    setShowProfile(false); // Close the profile editor
+  };
 
   return (
     <div className="sidebar">
@@ -30,6 +43,14 @@ const Sidebar = ({ contacts, onSelectContact, selectedContact }) => {
           </li>
         ))}
       </ul>
+      <ProfileMini user={user} onClick={() => setShowProfile(true)} />
+      {showProfile && (
+        <ProfileFull
+          user={user}
+          onClose={() => setShowProfile(false)}
+          onSave={handleSaveProfile}
+        />
+      )}
     </div>
   );
 };
