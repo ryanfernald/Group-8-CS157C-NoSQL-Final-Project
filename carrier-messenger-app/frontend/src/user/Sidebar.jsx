@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import './styling/Sidebar.css';
 import ProfileMini from './profile_mini';
 import ProfileFull from './profile_full';
+import green from '../assets/default_profile_icons/green.png';
+import orange from '../assets/default_profile_icons/orange.png';
+import silver from '../assets/default_profile_icons/silver.png';
 
 const Sidebar = ({ contacts, onSelectContact, selectedContact }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -13,7 +16,19 @@ const Sidebar = ({ contacts, onSelectContact, selectedContact }) => {
     profilePhoto: null, // Will be set to a default photo in ProfileFull
   });
 
-  const filteredContacts = contacts.filter(contact =>
+  // Assign specific profile photos to contacts
+  const contactsWithPhotos = contacts.map((contact) => {
+    if (contact.name === 'Alice') {
+      return { ...contact, profilePhoto: green };
+    } else if (contact.name === 'Bob') {
+      return { ...contact, profilePhoto: orange };
+    } else if (contact.name === 'Charlie') {
+      return { ...contact, profilePhoto: silver };
+    }
+    return contact; // Default case (if needed)
+  });
+
+  const filteredContacts = contactsWithPhotos.filter(contact =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -36,9 +51,10 @@ const Sidebar = ({ contacts, onSelectContact, selectedContact }) => {
         {filteredContacts.map((contact, index) => (
           <li
             key={index}
-            className={contact.id === selectedContact?.id ? 'active' : ''}
+            className={contact.name === selectedContact?.name ? 'active' : ''}
             onClick={() => onSelectContact(contact)}
           >
+            <img src={contact.profilePhoto} alt="Profile" className="contact-photo" />
             {contact.name}
           </li>
         ))}

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import './styling/MessageDisplay.css';
 import carrierPigeonLogo from '../assets/carrierpigeon-logo.svg';
+import MessageUserHeader from './message_user_header';
 
-const MessageDisplay = ({ messages, onSendMessage }) => {
+const MessageDisplay = ({ messages, onSendMessage, selectedContact }) => {
   const [newMessage, setNewMessage] = useState('');
 
   const handleInputChange = (e) => {
@@ -31,7 +32,8 @@ const MessageDisplay = ({ messages, onSendMessage }) => {
 
   return (
     <div className="message-display">
-      <img src={carrierPigeonLogo} alt="Carrier Pigeon Logo" className="logo-overlay" />
+<img src={carrierPigeonLogo} alt="Carrier Pigeon Logo" className="logo-overlay" />
+      <MessageUserHeader contact={selectedContact} />
       <div className="messages">
         {messages.map((message, index) => (
           <div key={index} className={`message ${message.isUser ? 'user-message' : 'incoming-message'}`}>
