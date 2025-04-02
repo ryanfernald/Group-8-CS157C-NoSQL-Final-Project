@@ -9,6 +9,7 @@
   z-index: 10;
   border-bottom: 5px solid #4b5a6a;
   border-radius: 10px;
+  margin-bottom: 1rem;
 }
 
 .header-photo {
@@ -19,6 +20,6 @@
 }
 
 .header-username {
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: bold;
 }

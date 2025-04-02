@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './styling/MessageDisplay.css';
 import carrierPigeonLogo from '../assets/carrierpigeon-logo.svg';
 import MessageUserHeader from './message_user_header';
 
 const MessageDisplay = ({ messages, onSendMessage, selectedContact }) => {
   const [newMessage, setNewMessage] = useState('');
+  const messagesEndRef = useRef(null); // Ref to track the end of the messages list
 
   const handleInputChange = (e) => {
     setNewMessage(e.target.value);
@@ -30,9 +31,16 @@ const MessageDisplay = ({ messages, onSendMessage, selectedContact }) => {
       .replace(/__(.*?)__/g, '<u>$1</u>'); // Underline text
   };
 
+  // Scroll to the bottom of the messages list whenever messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
+
   return (
     <div className="message-display">
-<img src={carrierPigeonLogo} alt="Carrier Pigeon Logo" className="logo-overlay" />
+      <img src={carrierPigeonLogo} alt="Carrier Pigeon Logo" className="logo-overlay" />
       <MessageUserHeader contact={selectedContact} />
       <div className="messages">
         {messages.map((message, index) => (
@@ -40,6 +48,8 @@ const MessageDisplay = ({ messages, onSendMessage, selectedContact }) => {
             <div dangerouslySetInnerHTML={{ __html: parseMessage(message.text) }} />
           </div>
         ))}
+        {/* Invisible div to ensure scrolling to the bottom */}
+        <div ref={messagesEndRef} />
       </div>
       <div className="message-box">
         <input
