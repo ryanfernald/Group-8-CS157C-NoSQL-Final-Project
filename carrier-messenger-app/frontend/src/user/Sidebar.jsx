@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import './styling/Sidebar.css';
 import ProfileMini from './profile_mini';
 import ProfileFull from './profile_full';
+import DeleteMessagesAlert from './delete_messages_alert';
+import DownloadMessages from './download_messages';
 import green from '../assets/default_profile_icons/green.png';
 import orange from '../assets/default_profile_icons/orange.png';
 import silver from '../assets/default_profile_icons/silver.png';
@@ -9,14 +11,15 @@ import silver from '../assets/default_profile_icons/silver.png';
 const Sidebar = ({ contacts, onSelectContact, selectedContact }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfile, setShowProfile] = useState(false);
+  const [dropdownVisible, setDropdownVisible] = useState(null); // Track which dropdown is open
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [showDownloadPopup, setShowDownloadPopup] = useState(false);
 
-  // User object with default profile photo
   const [user, setUser] = useState({
     username: 'JohnDoe',
-    profilePhoto: null, // Will be set to a default photo in ProfileFull
+    profilePhoto: null,
   });
 
-  // Assign specific profile photos to contacts
   const contactsWithPhotos = contacts.map((contact) => {
     if (contact.name === 'Alice') {
       return { ...contact, profilePhoto: green };
@@ -31,6 +34,20 @@ const Sidebar = ({ contacts, onSelectContact, selectedContact }) => {
   const filteredContacts = contactsWithPhotos.filter(contact =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleDropdownToggle = (index) => {
+    setDropdownVisible(dropdownVisible === index ? null : index);
+  };
+
+  const handleDeleteChat = () => {
+    setShowDeleteAlert(true);
+    setDropdownVisible(null); // Close dropdown
+  };
+
+  const handleDownloadMessages = () => {
+    setShowDownloadPopup(true);
+    setDropdownVisible(null); // Close dropdown
+  };
 
   const handleSaveProfile = (updatedUser) => {
     setUser(updatedUser); // Update the user object with the new data
@@ -56,6 +73,21 @@ const Sidebar = ({ contacts, onSelectContact, selectedContact }) => {
           >
             <img src={contact.profilePhoto} alt="Profile" className="contact-photo" />
             {contact.name}
+            <button
+              className="contact-options-button"
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent triggering the contact selection
+                handleDropdownToggle(index);
+              }}
+            >
+              ⋮
+            </button>
+            {dropdownVisible === index && (
+              <div className="dropdown-menu">
+                <button onClick={handleDeleteChat}>Delete Chat</button>
+                <button onClick={handleDownloadMessages}>Download Messages</button>
+              </div>
+            )}
           </li>
         ))}
       </ul>
@@ -66,6 +98,12 @@ const Sidebar = ({ contacts, onSelectContact, selectedContact }) => {
           onClose={() => setShowProfile(false)}
           onSave={handleSaveProfile}
         />
+      )}
+      {showDeleteAlert && (
+        <DeleteMessagesAlert onClose={() => setShowDeleteAlert(false)} />
+      )}
+      {showDownloadPopup && (
+        <DownloadMessages onClose={() => setShowDownloadPopup(false)} />
       )}
     </div>
   );
