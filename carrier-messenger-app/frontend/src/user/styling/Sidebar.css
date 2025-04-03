@@ -117,3 +117,20 @@
   .dropdown-menu button:hover {
     background-color: #f0f0f0;
   }
+
+  .new-chat-button {
+    width: calc(100% - 2rem);
+    margin: 1rem;
+    padding: 1rem;
+    background-color: #9fbfb4;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    text-align: center;
+  }
+  
+  .new-chat-button:hover {
+    background-color: #97b7ac;
+  }

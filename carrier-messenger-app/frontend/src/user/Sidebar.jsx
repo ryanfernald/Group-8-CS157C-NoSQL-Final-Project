@@ -4,6 +4,7 @@ import ProfileMini from './profile_mini';
 import ProfileFull from './profile_full';
 import DeleteMessagesAlert from './delete_messages_alert';
 import DownloadMessages from './download_messages';
+import NewChat from './new_chat';
 import green from '../assets/default_profile_icons/green.png';
 import orange from '../assets/default_profile_icons/orange.png';
 import silver from '../assets/default_profile_icons/silver.png';
@@ -11,6 +12,7 @@ import silver from '../assets/default_profile_icons/silver.png';
 const Sidebar = ({ contacts, onSelectContact, selectedContact }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfile, setShowProfile] = useState(false);
+  const [showNewChatPopup, setShowNewChatPopup] = useState(false); // Track New Chat popup visibility
   const [dropdownVisible, setDropdownVisible] = useState(null); // Track which dropdown is open
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [showDownloadPopup, setShowDownloadPopup] = useState(false);
@@ -54,9 +56,15 @@ const Sidebar = ({ contacts, onSelectContact, selectedContact }) => {
     setShowProfile(false); // Close the profile editor
   };
 
+  const handleNewChat = () => {
+    setShowNewChatPopup(true);
+  };
+
   return (
     <div className="sidebar">
-      <h2>Contacts</h2>
+      <button className="new-chat-button" onClick={handleNewChat}>
+        New Chat
+      </button>
       <input
         type="text"
         placeholder="Search contacts..."
@@ -104,6 +112,9 @@ const Sidebar = ({ contacts, onSelectContact, selectedContact }) => {
       )}
       {showDownloadPopup && (
         <DownloadMessages onClose={() => setShowDownloadPopup(false)} />
+      )}
+      {showNewChatPopup && (
+        <NewChat onClose={() => setShowNewChatPopup(false)} />
       )}
     </div>
   );
