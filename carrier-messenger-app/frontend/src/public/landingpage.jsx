@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import axios from 'axios';
 import "./styling/landingpage.css";
 import messagingIcon from "../assets/messaging-icon.gif";
 import uiIcon from "../assets/ui-icon.gif";
@@ -8,6 +9,22 @@ import personIcon from "../assets/person-icon.gif";
 import carrierPigeonLogo from "../assets/carrierpigeon-logo.svg";
 
 const LandingPage = () => {
+
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleLogin = async () => {
+    try {
+      const response = await axios.post('http://localhost:5173/login', { username, password });
+      console.log(response.data);
+      // TODO: Redirect to messaging page after successful login
+      alert('Login successful!');
+    } catch (error) {
+      console.error(error.response.data.message);
+      alert('Invalid credentials');
+    }
+  };
+
   return (
     <div className="landing-container">
       {/* Left Side - App Information */}
@@ -39,9 +56,9 @@ const LandingPage = () => {
       <div className="login-section">
         <img src={carrierPigeonLogo} alt="Carrier Pigeon Logo" className="logo" />
         <h2>Login</h2>
-        <input type="text" placeholder="Username" className="input-field" />
-        <input type="password" placeholder="Password" className="input-field" />
-        <button className="login-btn">Login</button>
+        <input type="text" placeholder="Username" className="input-field" value={username} onChange={(e) => setUsername(e.target.value)} />
+        <input type="password" placeholder="Password" className="input-field" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <button className="login-btn" onClick={handleLogin}>Login</button>
         
         {/* Placeholder for login functionality */}
         {/* TODO: Implement login API connection here */}
