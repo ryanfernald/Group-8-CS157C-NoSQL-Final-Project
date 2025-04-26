@@ -1,8 +1,11 @@
 from flask import Flask, request, jsonify
 import redis
+from api.user_routes import user_bp
+
 
 app = Flask(__name__)
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+app.register_blueprint(user_bp)
 
 @app.route('/messages/<chat_id>', methods=['GET'])
 def get_messages(chat_id):
