@@ -7,6 +7,8 @@ import LandingPage from './public/landingpage';
 import SignUp from './public/signup';
 import Main from './user/main';
 
+import TestPage from './public/TestPage';
+
 function App() {
   return (
     <div>
@@ -16,6 +18,7 @@ function App() {
           {/* Public Pages */}
           <Route path='/' element={<LandingPage />} />
           <Route path='/signup' element={<SignUp />} />
+          <Route path='/test' element={<TestPage />} />
           
           {/* User Pages (Require Login) */}
           <Route path='/messages' element={<Main />} />
