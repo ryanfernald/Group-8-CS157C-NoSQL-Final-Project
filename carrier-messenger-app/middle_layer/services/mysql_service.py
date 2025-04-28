@@ -9,6 +9,7 @@ def get_db_connection():
         user=Config.MYSQL_USER,
         password=Config.MYSQL_PASSWORD,
         db=Config.MYSQL_DATABASE,
+        port=Config.MYSQL_PORT,
         cursorclass=pymysql.cursors.DictCursor
     )
 

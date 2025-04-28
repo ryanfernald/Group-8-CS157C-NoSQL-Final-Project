@@ -13,14 +13,22 @@ const LandingPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault(); 
+    console.log("🔵 handleLogin triggered"); // <--- ADD this
+    console.log("Username:", username);
+    console.log("Password:", password);
+
     try {
-      const response = await axios.post('http://localhost:5173/login', { username, password });
-      console.log(response.data);
-      // TODO: Redirect to messaging page after successful login
+      const response = await axios.post('/api/login', 
+        { username, password },
+        { withCredentials: true }
+      );
+      console.log("🟢 Login Response:", response.data); // <--- ADD this
       alert('Login successful!');
+      window.location.href = '/messages'; 
     } catch (error) {
-      console.error(error.response.data.message);
+      console.error("🔴 Login Error:", error.response?.data?.message || error.message); // <--- Improved error
       alert('Invalid credentials');
     }
   };
@@ -51,19 +59,32 @@ const LandingPage = () => {
           <p>Sponsored by Mike Wu</p>
         </div>
       </div>
-      
+
       {/* Right Side - Login Form */}
       <div className="login-section">
         <img src={carrierPigeonLogo} alt="Carrier Pigeon Logo" className="logo" />
         <h2>Login</h2>
-        <input type="text" placeholder="Username" className="input-field" value={username} onChange={(e) => setUsername(e.target.value)} />
-        <input type="password" placeholder="Password" className="input-field" value={password} onChange={(e) => setPassword(e.target.value)} />
-        <button className="login-btn" onClick={handleLogin}>Login</button>
-        
-        {/* Placeholder for login functionality */}
-        {/* TODO: Implement login API connection here */}
-        
-        <p className="signup-text">Don't have an account yet? <a href="/signup">Sign Up</a></p>
+        <form onSubmit={handleLogin}>
+          <input 
+            type="text" 
+            placeholder="Username" 
+            className="input-field" 
+            value={username} 
+            onChange={(e) => setUsername(e.target.value)} 
+          />
+          <input 
+            type="password" 
+            placeholder="Password" 
+            className="input-field" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+          />
+          <button type="submit" className="login-btn">Login</button>
+        </form>
+
+        <p className="signup-text">
+          Don't have an account yet? <a href="/signup">Sign Up</a>
+        </p>
         <button className="signup-btn" onClick={() => window.location.href='/signup'}>Sign Up</button>
       </div>
     </div>

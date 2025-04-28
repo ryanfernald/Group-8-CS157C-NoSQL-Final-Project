@@ -1,12 +1,17 @@
 from flask import Flask, request, jsonify
 import redis
+from flask_cors import CORS
 from api.user_routes import user_bp
 
-
 app = Flask(__name__)
+
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True, allow_headers="*")
+
 redis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)
+
 app.register_blueprint(user_bp)
 
+# Redis Message Routes (unchanged)
 @app.route('/messages/<chat_id>', methods=['GET'])
 def get_messages(chat_id):
     messages = redis_client.lrange(f'chat:{chat_id}', 0, -1)
@@ -16,9 +21,9 @@ def get_messages(chat_id):
 def store_message():
     print("Received Request:", request.method, request.path)
     print("Headers:", request.headers)
-    print("Raw Data:", request.data)  # Check if data is coming in at all
-    print("JSON Data:", request.json)  # Check if Flask sees the JSON
-    
+    print("Raw Data:", request.data)
+    print("JSON Data:", request.json)
+
     data = request.json
     if not data or 'chat_id' not in data or 'message' not in data:
         return jsonify({"error": "Invalid request"}), 400
