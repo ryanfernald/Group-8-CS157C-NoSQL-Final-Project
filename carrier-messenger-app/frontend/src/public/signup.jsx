@@ -10,22 +10,16 @@ const SignupPage = () => {
 
   const handleSignup = async (e) => {
     e.preventDefault();
-    console.log("🔵 handleSignup triggered"); // <--- Confirm function runs
-    console.log("Username:", username);
-    console.log("Email:", email);
-    console.log("Password:", password);
-
     try {
-        const response = await axios.post('/api/signup', 
-            { username, email, password },
-            { withCredentials: true }
-          );
-      console.log("🟢 Signup Response:", response.data); // <--- Log success
-      alert('Account created successfully!');
-      window.location.href = '/'; // Redirect to login page
+      const response = await axios.post('http://localhost:5000/signup', 
+        { username, email, password } // Payload
+      );
+      console.log(response.data);
+      alert('Signup successful!');
+      window.location.href = '/';
     } catch (error) {
-      console.error("🔴 Signup Error:", error.response?.data?.message || error.message); // <--- Log error
-      alert('Signup failed. Username might already be taken.');
+      console.error('Signup failed:', error.response?.data?.message || error.message);
+      alert('Signup failed.');
     }
   };
 

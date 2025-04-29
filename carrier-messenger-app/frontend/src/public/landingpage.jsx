@@ -20,7 +20,7 @@ const LandingPage = () => {
     console.log("Password:", password);
 
     try {
-      const response = await axios.post('/api/login', 
+      const response = await axios.post('http://localhost:5000/login', 
         { username, password },
         { withCredentials: true }
       );
