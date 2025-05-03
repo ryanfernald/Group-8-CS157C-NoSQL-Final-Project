@@ -11,14 +11,20 @@ const SignupPage = () => {
   const handleSignup = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5000/signup', 
-        { username, email, password } // Payload
-      );
-      console.log(response.data);
-      alert('Signup successful!');
-      window.location.href = '/';
+      const response = await axios.post('http://localhost:5000/signup', {
+        username, email, password
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        withCredentials: false
+      });
+  
+      const { token, user_id } = response.data;
+      localStorage.setItem('userToken', token);
+      localStorage.setItem('userId', user_id);
+      window.location.href = '/messages';
     } catch (error) {
-      console.error('Signup failed:', error.response?.data?.message || error.message);
       alert('Signup failed.');
     }
   };

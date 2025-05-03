@@ -18,7 +18,7 @@ function App() {
           {/* Public Pages */}
           <Route path='/' element={<LandingPage />} />
           <Route path='/signup' element={<SignUp />} />
-          <Route path='/test' element={<TestPage />} />
+          {/* <Route path='/test' element={<TestPage />} /> */}
           
           {/* User Pages (Require Login) */}
           <Route path='/messages' element={<Main />} />
