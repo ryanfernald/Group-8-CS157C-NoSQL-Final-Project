@@ -1,5 +1,5 @@
 import redis
-from flush_chat_to_mysql import flush_chat_to_mysql
+from services.flush_chat_to_mysql import flush_chat_to_mysql
 
 def listen_for_chat_expiry():
     r = redis.Redis(host='localhost', port=6379, decode_responses=True)

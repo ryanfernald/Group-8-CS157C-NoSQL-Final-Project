@@ -1,6 +1,6 @@
 import redis
-from flush_users_to_mysql import flush_user_to_mysql
-from retrieve_chats_for_user import hydrate_user_chats
+from services.flush_users_to_mysql import flush_user_to_mysql
+from services.retrieve_chats_for_user import hydrate_user_chats
 
 r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
