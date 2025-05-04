@@ -1,63 +1,28 @@
 import redis
-import mysql.connector
-import time
+from flush_users_to_mysql import flush_user_to_mysql
+from retrieve_chats_for_user import hydrate_user_chats
 
 r = redis.Redis(host='localhost', port=6379, decode_responses=True)
 
-def flush_user_by_id(user_id):
-    user_key = f"user:temp:{user_id}"
-    user_data = r.hgetall(user_key)
-
-    if not user_data:
-        print(f"⚠️ No user data found for user_id {user_id}")
-        return
-
-    # Insert into MySQL
-    try:
-        conn = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="medic26861311()",
-            database="carrier_messenger"
-        )
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO users (username, email, password_hash)
-            VALUES (%s, %s, %s)
-        """, (user_data['username'], user_data['email'], user_data['password_hash']))
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        print(f"✅ Flushed user {user_data['username']} (ID {user_id}) from Redis to MySQL.")
-    except Exception as e:
-        print(f"❌ Error flushing user {user_id}: {e}")
-
-    # Clean up Redis keys
-    r.delete(user_key)
-
-def listen_for_expired_tokens():
+def monitor_user_tokens():
     pubsub = r.pubsub()
-    pubsub.psubscribe('__keyevent@0__:expired')
+    pubsub.psubscribe('__keyevent@0__:expired', '__keyspace@0__:user_token:*')
 
-    print("🔄 Listening for Redis key expirations...")
+    print("🔄 Monitoring for user login/logout events...")
     for message in pubsub.listen():
         if message['type'] == 'pmessage':
-            expired_key = message['data']
-            if expired_key.startswith("user_token:"):
-                token = expired_key.replace("user_token:", "")
-                user_id = token.replace("tk", "")  # Based on token naming convention tk<user_id>
-                flush_user_by_id(user_id)
+            event_key = message['channel']
+            redis_key = message['data']
 
-def manual_logout(user_id):
-    """Call this when a user clicks 'logout'."""
-    token_key = f"user_token:tk{user_id}"
-    r.delete(token_key)
-    flush_user_by_id(user_id)
+            # Handle token expiration
+            if redis_key.startswith("user_token:tk") and 'expired' in event_key:
+                user_id = redis_key.replace("user_token:tk", "")
+                flush_user_to_mysql(user_id)
 
-# Entry point
+            # Handle login (HSET triggers keyspace, not keyevent)
+            elif redis_key.startswith("user_token:tk") and 'keyspace' in event_key:
+                user_id = redis_key.replace("user_token:tk", "")
+                hydrate_user_chats(user_id)
+
 if __name__ == "__main__":
-    try:
-        listen_for_expired_tokens()
-    except KeyboardInterrupt:
-        print("🛑 Stopped monitoring.")
+    monitor_user_tokens()
