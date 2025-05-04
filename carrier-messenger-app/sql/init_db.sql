@@ -17,3 +17,10 @@ CREATE TABLE messages (
   message_text TEXT,
   timestamp DATETIME
 );
+
+CREATE TABLE user_chats (
+    user_id INT,
+    chat_id VARCHAR(255),
+    PRIMARY KEY (user_id, chat_id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
