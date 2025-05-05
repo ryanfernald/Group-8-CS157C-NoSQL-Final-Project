@@ -13,18 +13,6 @@ const LandingPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const testConnection = async () => {
-    try {
-      const res = await fetch("http://127.0.0.1:5000/user/ping", {
-        method: 'GET'
-      });
-      const data = await res.json();
-      console.log(data)
-    } catch (err) {
-      console.error("❌ Ping failed:", err);
-    }
-  };
-
   const handleLogin = async (e) => {
     e.preventDefault(); 
     console.log("🔵 handleLogin triggered");
@@ -37,10 +25,10 @@ const LandingPage = () => {
         headers: {
           'Content-Type': 'application/json'
         },
-        // credentials: 'include',  // for cookies and session support
+
         body: JSON.stringify({
           username: username,
-          password: password  // assuming you add password validation later
+          password: password
         })
       });
   
@@ -51,11 +39,13 @@ const LandingPage = () => {
   
       const data = await response.json();
       console.log("🟢 Login Response:", data);
+      localStorage.setItem('userId', data.user_id);
+      localStorage.setItem('username', data.username);
       console.log("Login successful, redirecting...");
       window.location.href = '/messages';
   
     } catch (error) {
-      console.error("🔴 Login Error:", error.message);
+      console.error("🔴 Login Error:", error.response?.data?.message || error.message);
       alert('Invalid credentials');
     }
   };

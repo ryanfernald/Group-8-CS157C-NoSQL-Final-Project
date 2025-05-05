@@ -39,7 +39,6 @@ def signup():
 
 ########## Login Router ##########
 
-
 @user_bp.route('/login', methods=['POST', 'OPTIONS'])
 @cross_origin()
 def login():
@@ -60,13 +59,27 @@ def login():
         if user.get("username") == username and user.get("password_hash") == password_hash:
             user_id = user.get("id")
             hydrate_user_chats(user_id)
+            print(f"Matched user: {user['username']}, ID: {user['id']}")
             return jsonify({
                 "message": "Login successful",
-                "user_id": user_id
+                "user_id": user_id,
+                "username": username,
             }), 200
 
     return jsonify({"message": "Invalid credentials"}), 401
 
+@user_bp.route('/profile/<user_id>', methods=['GET'])
+@cross_origin()
+def get_user_profile(user_id):
+    user_data = r.hgetall(f"user:{user_id}")
+    if not user_data:
+        return jsonify({"message": "User not found"}), 404
+    return jsonify({
+        "id": user_data["id"],
+        "username": user_data["username"],
+        "email": user_data["email"],
+        # "profilePhoto": user_data.get("profilePhoto", "")  # optional
+    }), 200
 
 @user_bp.route('/ping', methods=['GET', 'OPTIONS'])
 @cross_origin()

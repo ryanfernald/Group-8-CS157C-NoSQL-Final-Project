@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './styling/Sidebar.css';
 import ProfileMini from './profile_mini';
 import ProfileFull from './profile_full';
@@ -21,6 +21,32 @@ const Sidebar = ({ contacts, onSelectContact, selectedContact }) => {
     username: 'JohnDoe',
     profilePhoto: null,
   });
+
+  useEffect(() => {
+    console.log("📦 Stored userId:", localStorage.getItem('userId'));
+    console.log("📦 Stored username:", localStorage.getItem('username'));
+  }, []);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const userId = localStorage.getItem('userId');
+      if (!userId) return;
+
+      try {
+        const response = await fetch(`http://127.0.0.1:5000/user/profile/${userId}`);
+        if (!response.ok) throw new Error('Failed to fetch user');
+        const data = await response.json();
+        setUser({
+          username: data.username,
+          profilePhoto: data.profilePhoto || null
+        });
+      } catch (err) {
+        console.error("Failed to load user profile:", err);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   const contactsWithPhotos = contacts.map((contact) => {
     if (contact.name === 'Alice') {
