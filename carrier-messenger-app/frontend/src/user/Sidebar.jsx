@@ -8,8 +8,9 @@ import NewChat from './new_chat';
 import green from '../assets/default_profile_icons/green.png';
 import orange from '../assets/default_profile_icons/orange.png';
 import silver from '../assets/default_profile_icons/silver.png';
+import defaultProfilePhoto from '../assets/default_profile_icons/blue-flying.png';
 
-const Sidebar = ({ contacts, onSelectContact, selectedContact }) => {
+const Sidebar = ({ onSelectContact, selectedContact }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showProfile, setShowProfile] = useState(false);
   const [showNewChatPopup, setShowNewChatPopup] = useState(false); // Track New Chat popup visibility
@@ -48,20 +49,44 @@ const Sidebar = ({ contacts, onSelectContact, selectedContact }) => {
     fetchUser();
   }, []);
 
-  const contactsWithPhotos = contacts.map((contact) => {
-    if (contact.name === 'Alice') {
-      return { ...contact, profilePhoto: green };
-    } else if (contact.name === 'Bob') {
-      return { ...contact, profilePhoto: orange };
-    } else if (contact.name === 'Charlie') {
-      return { ...contact, profilePhoto: silver };
-    }
-    return contact; // Default case (if needed)
-  });
+  // const contactsWithPhotos = contacts.map((contact) => {
+  //   if (contact.name === 'Alice') {
+  //     return { ...contact, profilePhoto: green };
+  //   } else if (contact.name === 'Bob') {
+  //     return { ...contact, profilePhoto: orange };
+  //   } else if (contact.name === 'Charlie') {
+  //     return { ...contact, profilePhoto: silver };
+  //   }
+  //   return contact; // Default case (if needed)
+  // });
 
-  const filteredContacts = contactsWithPhotos.filter(contact =>
+  // const filteredContacts = contactsWithPhotos.filter(contact =>
+  //   contact.name.toLowerCase().includes(searchQuery.toLowerCase())
+  // );
+
+  const [contacts, setContacts] = useState([]);
+
+  const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
+  
+  useEffect(() => {
+    const loadContacts = async () => {
+      const userId = localStorage.getItem('userId');
+      if (!userId) return;
+
+      try {
+        const response = await fetch(`http://127.0.0.1:5000/user/contacts/${userId}`);
+        if (!response.ok) throw new Error('Failed to fetch contacts');
+        const data = await response.json();
+        setContacts(data.contacts || []);
+      } catch (err) {
+        console.error("Failed to load contacts:", err);
+      }
+    };
+
+    loadContacts();
+  }, []);
 
   const handleDropdownToggle = (index) => {
     setDropdownVisible(dropdownVisible === index ? null : index);
@@ -105,7 +130,7 @@ const Sidebar = ({ contacts, onSelectContact, selectedContact }) => {
             className={contact.name === selectedContact?.name ? 'active' : ''}
             onClick={() => onSelectContact(contact)}
           >
-            <img src={contact.profilePhoto} alt="Profile" className="contact-photo" />
+            <img src={contact.profilePhoto || defaultProfilePhoto} alt="Profile" className="contact-photo" />
             {contact.name}
             <button
               className="contact-options-button"

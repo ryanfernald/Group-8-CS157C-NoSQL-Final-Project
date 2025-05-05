@@ -81,6 +81,37 @@ def get_user_profile(user_id):
         # "profilePhoto": user_data.get("profilePhoto", "")  # optional
     }), 200
 
+@user_bp.route('/contacts/<user_id>', methods=['GET'])
+@cross_origin()
+def get_user_contacts(user_id):
+    # Step 1: Get all message_token keys
+    chat_keys = r.keys("message_token:*")
+    contacts = []
+
+    seen_ids = set()
+
+    for key in chat_keys:
+        chat_info = r.hgetall(key)
+        participants = chat_info.get("participants", "")
+        chat_participant_ids = participants.split(",")
+
+        if user_id not in chat_participant_ids:
+            continue  # not part of this chat
+
+        # Find the other participant(s)
+        for other_id in chat_participant_ids:
+            if other_id != user_id and other_id not in seen_ids:
+                other_user = r.hgetall(f"user:{other_id}")
+                if other_user:
+                    contacts.append({
+                        "id": other_id,
+                        "name": other_user.get("username", f"User {other_id}"),
+                        "chat_id": chat_info.get("chat_id")
+                    })
+                    seen_ids.add(other_id)
+
+    return jsonify({"contacts": contacts}), 200
+
 @user_bp.route('/ping', methods=['GET', 'OPTIONS'])
 @cross_origin()
 def ping():
