@@ -32,7 +32,7 @@ const LandingPage = () => {
     console.log("Password:", password);
   
     try {
-      const response = await fetch('http://127.0.0.1:5173/user/login', {
+      const response = await fetch('http://127.0.0.1:5000/user/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -51,7 +51,7 @@ const LandingPage = () => {
   
       const data = await response.json();
       console.log("🟢 Login Response:", data);
-      alert('Login successful!');
+      console.log("Login successful, redirecting...");
       window.location.href = '/messages';
   
     } catch (error) {
@@ -110,7 +110,7 @@ const LandingPage = () => {
     
         </form>
 
-        <button onClick={testConnection}>Test Flask Connection</button>
+        {/* <button onClick={testConnection}>Test Flask Connection</button> */}
         
 
         <p className="signup-text">
