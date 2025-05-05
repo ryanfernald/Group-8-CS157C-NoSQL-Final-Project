@@ -1,0 +1,41 @@
+services:
+  flask_app:
+    build: . # Build the image from the Dockerfile in the current directory
+    container_name: flask_chat_app
+    ports:
+      - "5000:5000" # Map host port 5000 to container port 5000
+    volumes:
+      - .:/app # Mount current directory into /app in container (for development)
+    env_file:
+      - .env # Load environment variables from .env file
+    depends_on:
+      - redis_db
+      - mysql_db
+    restart: unless-stopped
+
+  redis_db:
+    image: redis:alpine # Use the official Redis image (Alpine version is small)
+    container_name: redis_chat_db
+    volumes:
+      - redis_data:/data # Persist Redis data
+    restart: unless-stopped
+    ports: # Only uncomment if you need to access Redis directly from your host machine
+      - "6379:6379"
+
+  mysql_db:
+    image: mysql:8.0 # Use an official MySQL image
+    container_name: mysql_chat_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD} # Get from .env
+      MYSQL_DATABASE: ${MYSQL_DATABASE}           # Get from .env
+      MYSQL_USER: ${MYSQL_USER}                   # Get from .env
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}           # Get from .env
+    volumes:
+      - mysql_data:/var/lib/mysql # Persist MySQL data
+    restart: unless-stopped
+    ports: # Only uncomment if you need to access MySQL directly from your host machine
+      - "3306:3306"
+
+volumes:
+  redis_data: # Define the named volume for Redis
+  mysql_data: # Define the named volume for MySQL
