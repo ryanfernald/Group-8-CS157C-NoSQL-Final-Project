@@ -13,22 +13,49 @@ const LandingPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
+  const testConnection = async () => {
+    try {
+      const res = await fetch("http://127.0.0.1:5000/user/ping", {
+        method: 'GET'
+      });
+      const data = await res.json();
+      console.log(data)
+    } catch (err) {
+      console.error("❌ Ping failed:", err);
+    }
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault(); 
-    console.log("🔵 handleLogin triggered"); // <--- ADD this
+    console.log("🔵 handleLogin triggered");
     console.log("Username:", username);
     console.log("Password:", password);
-
+  
     try {
-      const response = await axios.post('http://localhost:5000/login', 
-        { username, password },
-        { withCredentials: true }
-      );
-      console.log("🟢 Login Response:", response.data); // <--- ADD this
+      const response = await fetch('http://127.0.0.1:5173/user/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        // credentials: 'include',  // for cookies and session support
+        body: JSON.stringify({
+          username: username,
+          password: password  // assuming you add password validation later
+        })
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Login failed');
+      }
+  
+      const data = await response.json();
+      console.log("🟢 Login Response:", data);
       alert('Login successful!');
-      window.location.href = '/messages'; 
+      window.location.href = '/messages';
+  
     } catch (error) {
-      console.error("🔴 Login Error:", error.response?.data?.message || error.message); // <--- Improved error
+      console.error("🔴 Login Error:", error.message);
       alert('Invalid credentials');
     }
   };
@@ -80,7 +107,11 @@ const LandingPage = () => {
             onChange={(e) => setPassword(e.target.value)} 
           />
           <button type="submit" className="login-btn">Login</button>
+    
         </form>
+
+        <button onClick={testConnection}>Test Flask Connection</button>
+        
 
         <p className="signup-text">
           Don't have an account yet? <a href="/signup">Sign Up</a>
