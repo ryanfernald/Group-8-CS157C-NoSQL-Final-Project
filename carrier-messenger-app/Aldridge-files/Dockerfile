@@ -7,7 +7,8 @@ ENV PYTHONUNBUFFERED 1
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Consider using --no-cache-dir if you don't need caching within the build stage
+RUN pip install -r requirements.txt
 
 COPY . .
 
@@ -15,7 +16,5 @@ COPY . .
 EXPOSE 5000
 
 # Command to run the app using Gunicorn
-# It looks for a 'create_app' function in the 'run.py' module/file
-# If your factory is in app/__init__.py, use "app:create_app()"
-# For now, assuming run.py will create the app instance
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "run:app"]
+# Added --access-logfile - to log HTTP requests to standard output
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--access-logfile", "-", "run:app"]
