@@ -6,3 +6,4 @@ gunicorn      # WSGI server to run Flask in the container
 mysql-connector-python # MySQL driver
 SQLAlchemy     # ORM for interacting with MySQL (optional but recommended)
 Flask-SQLAlchemy # Flask integration for SQLAlchemy (optional)
+Flask-Migrate
