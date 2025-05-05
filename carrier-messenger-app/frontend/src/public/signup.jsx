@@ -7,12 +7,13 @@ const SignupPage = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleSignup = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://127.0.0.1:5173/user/signup', {
-        username, email, password
+      const response = await axios.post('http://127.0.0.1:5000/user/signup', {
+        username, email, password, confirmPassword
       }, {
         headers: {
           'Content-Type': 'application/json'
@@ -70,7 +71,10 @@ const SignupPage = () => {
               type="password" 
               id="confirm-password" 
               placeholder="Re-enter your password" 
-              name="confirm-password" 
+              name="confirm-password"
+              className="input-field"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)} 
               required 
             />
           </div>
