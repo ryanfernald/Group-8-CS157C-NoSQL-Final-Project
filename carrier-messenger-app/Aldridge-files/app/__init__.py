@@ -43,7 +43,8 @@ def create_app(config_class=Config):
     # --- Register Blueprints ---
     from .api.routes_auth import auth_bp # <-- Make sure this line is NOT commented out
     app.register_blueprint(auth_bp) # <-- Make sure this line is NOT commented out
-
+    from .api.routes_chats import chats_bp # <-- Check this import
+    app.register_blueprint(chats_bp)      # <-- Check this registration
     # Register other blueprints later (e.g., for messages)
     # from .api.routes_messages import messages_bp
     # app.register_blueprint(messages_bp)
