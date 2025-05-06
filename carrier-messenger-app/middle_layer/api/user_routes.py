@@ -126,6 +126,51 @@ def get_user_contacts(user_id):
 
     return jsonify({"contacts": contacts})
 
+######### Update username router ##########
+
+@user_bp.route('/update-username', methods=['POST'])
+@cross_origin()
+def update_username():
+    data = request.get_json()
+    user_id = data.get("user_id")
+    new_username = data.get("new_username")
+
+    if not user_id or not new_username:
+        return jsonify({"message": "Missing fields"}), 400
+
+    user_key = f"user:{user_id}"
+
+    if not r.exists(user_key):
+        return jsonify({"message": "User not found"}), 404
+
+    r.hset(user_key, "username", new_username)
+
+    return jsonify({"message": "Username updated successfully"}), 200
+
+
+########## Update password router ##########
+
+@user_bp.route('/update-password', methods=['POST'])
+@cross_origin()
+def update_password():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    new_password = data.get('new_password')
+
+    if not user_id or not new_password:
+        return jsonify({"message": "Missing user_id or new_password"}), 400
+
+    password_hash = hashlib.sha256(new_password.encode()).hexdigest()
+
+    # Check if user exists in Redis
+    user_key = f"user:{user_id}"
+    if not r.exists(user_key):
+        return jsonify({"message": "User not found"}), 404
+
+    r.hset(user_key, "password_hash", password_hash)
+
+    return jsonify({"message": "Password updated successfully"}), 200
+
 ########## Ping Router ##########
 
 @user_bp.route('/ping', methods=['GET', 'OPTIONS'])
