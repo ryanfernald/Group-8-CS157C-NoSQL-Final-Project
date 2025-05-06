@@ -60,31 +60,39 @@ const Sidebar = ({ onSelectContact, selectedContact }) => {
   //   return contact; // Default case (if needed)
   // });
 
-  // const filteredContacts = contactsWithPhotos.filter(contact =>
-  //   contact.name.toLowerCase().includes(searchQuery.toLowerCase())
-  // );
-
   const [contacts, setContacts] = useState([]);
-
+  
   const filteredContacts = contacts.filter(contact =>
     contact.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-  
+
   useEffect(() => {
     const loadContacts = async () => {
       const userId = localStorage.getItem('userId');
       if (!userId) return;
-
+  
       try {
         const response = await fetch(`http://127.0.0.1:5000/user/contacts/${userId}`);
         if (!response.ok) throw new Error('Failed to fetch contacts');
         const data = await response.json();
-        setContacts(data.contacts || []);
+  
+        const processedContacts = (data.contacts || []).map(chat => {
+          const participants = chat.participants || [];
+          const otherParticipants = participants.filter(p => p.id !== userId);
+        
+          return {
+            chat_id: chat.chat_id,
+            name: otherParticipants.map(p => p.username).join(', '),
+            profilePhoto: otherParticipants[0]?.profilePhoto || null
+          };
+        });
+  
+        setContacts(processedContacts);
       } catch (err) {
         console.error("Failed to load contacts:", err);
       }
     };
-
+  
     loadContacts();
   }, []);
 

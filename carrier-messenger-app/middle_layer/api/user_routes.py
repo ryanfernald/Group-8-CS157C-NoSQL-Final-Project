@@ -88,33 +88,43 @@ def get_user_profile(user_id):
 @user_bp.route('/contacts/<user_id>', methods=['GET'])
 @cross_origin()
 def get_user_contacts(user_id):
-    # Step 1: Get all message_token keys
-    chat_keys = r.keys("message_token:*")
+    # Fetch all message_token keys
+    all_keys = r.keys('message_token:*')
     contacts = []
 
-    seen_ids = set()
+    for key in all_keys:
+        chat_data = r.hgetall(key)
+        if not chat_data:
+            continue
 
-    for key in chat_keys:
-        chat_info = r.hgetall(key)
-        participants = chat_info.get("participants", "")
-        chat_participant_ids = participants.split(",")
+        participants_raw = chat_data.get('participants')
+        if not participants_raw:
+            continue
 
-        if user_id not in chat_participant_ids:
-            continue  # not part of this chat
+        participant_ids = participants_raw.split(',')
 
-        # Find the other participant(s)
-        for other_id in chat_participant_ids:
-            if other_id != user_id and other_id not in seen_ids:
-                other_user = r.hgetall(f"user:{other_id}")
-                if other_user:
-                    contacts.append({
-                        "id": other_id,
-                        "name": other_user.get("username", f"User {other_id}"),
-                        "chat_id": chat_info.get("chat_id")
-                    })
-                    seen_ids.add(other_id)
+        if user_id not in participant_ids:
+            continue  # Skip chats the user is not part of
 
-    return jsonify({"contacts": contacts}), 200
+        # Remove self
+        other_participants = [pid for pid in participant_ids if pid != user_id]
+
+        enriched = []
+        for pid in other_participants:
+            user_info = r.hgetall(f"user:{pid}")
+            if user_info:
+                enriched.append({
+                    "id": pid,
+                    "username": user_info.get("username", "Unknown"),
+                    # "profilePhoto": user_info.get("profilePhoto")
+                })
+
+        contacts.append({
+            "chat_id": chat_data.get("chat_id"),
+            "participants": enriched
+        })
+
+    return jsonify({"contacts": contacts})
 
 ########## Ping Router ##########
 

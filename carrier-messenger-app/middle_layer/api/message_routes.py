@@ -56,55 +56,60 @@ def post_message(chat_id):
 
 @message_bp.route('/new-chat', methods=['POST'])
 @cross_origin()
-def create_new_chat():
+def create_chat():
     data = request.get_json()
     current_user_id = data.get('currentUserId')
     current_username = data.get('currentUsername')
-    target_input = data.get('target')  # Can be username or email
+    targets = data.get('targets', [])
 
-    if not all([current_user_id, current_username, target_input]):
-        return jsonify({"message": "Missing required fields"}), 400
+    if not current_user_id or not current_username:
+        return jsonify({"message": "Missing current user info"}), 400
 
-    # Step 1: Find target user by username or email
-    target_user_id = None
-    target_username = None
+    if not targets or not isinstance(targets, list):
+        return jsonify({"message": "Invalid targets"}), 400
 
-    for key in r.scan_iter("user:*"):
-        user_data = r.hgetall(key)
-        if user_data.get('username') == target_input or user_data.get('email') == target_input:
-            target_user_id = key.split(":")[1]
-            target_username = user_data.get('username')
-            break
+    # Get all user info and validate users exist
+    participant_ids = [current_user_id]
+    participant_usernames = [current_username]
 
-    if not target_user_id:
-        return jsonify({"message": "User not found"}), 404
-    
-    if target_user_id == current_user_id:
-        return jsonify({"message": "Can't create a chat with yourself."}), 400
+    for identifier in targets:
+        user = None
 
-    # Step 2: Check if chat already exists between just these two users
-    existing_chat = None
+        # Try to find by username or email
+        for key in r.scan_iter("user:*"):
+            user_data = r.hgetall(key)
+            if user_data.get("username") == identifier or user_data.get("email") == identifier:
+                user = user_data
+                break
+
+        if not user:
+            return jsonify({"message": f"User '{identifier}' not found"}), 404
+
+        if user["username"] == current_username or user["email"] == current_username:
+            return jsonify({"message": "Can't create a chat with yourself"}), 400
+
+        participant_ids.append(user["id"])
+        participant_usernames.append(user["username"])
+
+    # Check for existing 1:1 chat with exact same participants
     for key in r.scan_iter("message_token:*"):
-        chat_data = r.hgetall(key)
-        participants = chat_data.get('participants', '')
-        participant_list = participants.split(",")
-        if set(participant_list) == {current_user_id, target_user_id}:
-            existing_chat = key
-            break
+        token_data = r.hgetall(key)
+        existing_participants = token_data.get("participants", "").split(',')
+        if set(existing_participants) == set(participant_ids):
+            return jsonify({"message": f"Chat already exists with {', '.join(participant_usernames[1:])}"}), 409
 
-    if existing_chat:
-        return jsonify({"message": f"Chat already exists with {target_username}"}), 400
+    # Create new chat
+    unique_suffix = str(uuid.uuid4().hex[:4])
+    chat_id = f"chat_{'_'.join(participant_usernames)}_{unique_suffix}"
 
-    # Step 3: Create new chat
-    chat_id = f"chat_{current_username.lower()}_{target_username.lower()}_{uuid.uuid4().hex[:4]}"
     r.hset(f"message_token:{chat_id}", mapping={
         "chat_id": chat_id,
-        "participants": f"{current_user_id},{target_user_id}",
+        "participants": ','.join(participant_ids),
         "created_at": datetime.utcnow().isoformat()
     })
 
     return jsonify({
         "message": "Chat created",
         "chat_id": chat_id,
-        "other_username": target_username
+        "created_with": participant_usernames[1:]
     }), 201
