@@ -68,6 +68,8 @@ def login():
 
     return jsonify({"message": "Invalid credentials"}), 401
 
+###### User profile router, for profile mini ########
+
 @user_bp.route('/profile/<user_id>', methods=['GET'])
 @cross_origin()
 def get_user_profile(user_id):
@@ -80,6 +82,8 @@ def get_user_profile(user_id):
         "email": user_data["email"],
         # "profilePhoto": user_data.get("profilePhoto", "")  # optional
     }), 200
+
+####### user contacts router for sidebar ########
 
 @user_bp.route('/contacts/<user_id>', methods=['GET'])
 @cross_origin()
@@ -111,6 +115,8 @@ def get_user_contacts(user_id):
                     seen_ids.add(other_id)
 
     return jsonify({"contacts": contacts}), 200
+
+########## Ping Router ##########
 
 @user_bp.route('/ping', methods=['GET', 'OPTIONS'])
 @cross_origin()
