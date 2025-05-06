@@ -5,10 +5,7 @@ import ProfileFull from './profile_full';
 import DeleteMessagesAlert from './delete_messages_alert';
 import DownloadMessages from './download_messages';
 import NewChat from './new_chat';
-import green from '../assets/default_profile_icons/green.png';
-import orange from '../assets/default_profile_icons/orange.png';
-import silver from '../assets/default_profile_icons/silver.png';
-import defaultProfilePhoto from '../assets/default_profile_icons/blue-flying.png';
+import defaultProfilePhoto from '../assets/default_profile_icons/blue-flying.png';  
 
 const Sidebar = ({ onSelectContact, selectedContact }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -17,6 +14,8 @@ const Sidebar = ({ onSelectContact, selectedContact }) => {
   const [dropdownVisible, setDropdownVisible] = useState(null); // Track which dropdown is open
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [showDownloadPopup, setShowDownloadPopup] = useState(false);
+  const [chatToDelete, setChatToDelete] = useState(null);
+  const [activeDropdownChatId, setActiveDropdownChatId] = useState(null);
 
   const [user, setUser] = useState({
     username: 'JohnDoe',
@@ -96,11 +95,12 @@ const Sidebar = ({ onSelectContact, selectedContact }) => {
     loadContacts();
   }, []);
 
-  const handleDropdownToggle = (index) => {
-    setDropdownVisible(dropdownVisible === index ? null : index);
+  const handleDropdownToggle = (chatId) => {
+    setActiveDropdownChatId(activeDropdownChatId === chatId ? null : chatId);
   };
 
-  const handleDeleteChat = () => {
+  const handleDeleteChat = (chat) => {
+    setChatToDelete(chat);
     setShowDeleteAlert(true);
     setDropdownVisible(null); // Close dropdown
   };
@@ -143,16 +143,16 @@ const Sidebar = ({ onSelectContact, selectedContact }) => {
             <button
               className="contact-options-button"
               onClick={(e) => {
-                e.stopPropagation(); // Prevent triggering the contact selection
-                handleDropdownToggle(index);
+                e.stopPropagation();
+                handleDropdownToggle(contact.chat_id);
               }}
             >
               ⋮
             </button>
-            {dropdownVisible === index && (
+            {activeDropdownChatId === contact.chat_id && (
               <div className="dropdown-menu">
-                <button onClick={handleDeleteChat}>Delete Chat</button>
-                <button onClick={handleDownloadMessages}>Download Messages</button>
+                <button onClick={() => handleDeleteChat(contact)}>Delete Chat</button>
+                {/* <button onClick={handleDownloadMessages}>Download Messages</button> */}
               </div>
             )}
           </li>
@@ -166,8 +166,12 @@ const Sidebar = ({ onSelectContact, selectedContact }) => {
           onSave={handleSaveProfile}
         />
       )}
-      {showDeleteAlert && (
-        <DeleteMessagesAlert onClose={() => setShowDeleteAlert(false)} />
+      {showDeleteAlert && chatToDelete && (
+        <DeleteMessagesAlert
+          onClose={() => setShowDeleteAlert(false)}
+          selectedChat={chatToDelete}
+          userId={localStorage.getItem('userId')}
+        />
       )}
       {showDownloadPopup && (
         <DownloadMessages onClose={() => setShowDownloadPopup(false)} />
