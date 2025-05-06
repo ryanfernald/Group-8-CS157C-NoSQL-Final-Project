@@ -4,6 +4,7 @@ from flask import Blueprint, request, jsonify
 import hashlib
 import redis
 import json
+from datetime import datetime
 from flask_cors import cross_origin
 
 from services.redis_service import r
@@ -25,3 +26,24 @@ def get_messages(chat_id):
 
     messages = [eval(m) for m in messages_raw]  # Use json.loads() if JSON, eval() if string dicts
     return jsonify({"messages": messages}), 200
+
+@message_bp.route('/<chat_id>', methods=['POST'])
+@cross_origin()
+def post_message(chat_id):
+    data = request.get_json()
+    sender_id = data.get('sender_id')
+    sender = data.get('sender')
+    text = data.get('text')
+
+    if not sender_id or not sender or not text:
+        return jsonify({"error": "Missing fields"}), 400
+
+    message = {
+        "sender_id": sender_id,
+        "sender": sender,
+        "text": text,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+    r.rpush(f'chat:{chat_id}:messages', str(message))
+    return jsonify({"status": "Message stored"}), 201

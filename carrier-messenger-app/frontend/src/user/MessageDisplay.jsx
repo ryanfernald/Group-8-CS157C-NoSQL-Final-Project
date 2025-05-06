@@ -10,26 +10,52 @@ const MessageDisplay = ({ onSendMessage, selectedContact }) => {
   const [showTimestamps, setShowTimestamps] = useState(true);
   const [selectedMessageIndex, setSelectedMessageIndex] = useState(null);
 
+  const [showUsernames, setShowUsernames] = useState(true);
+
+  const currentUserId = localStorage.getItem('userId');
+
   const toggleTimestamps = () => {
     setShowTimestamps(!showTimestamps);
     setSelectedMessageIndex(null);
   };
 
-  const handleInputChange = (e) => {
-    setNewMessage(e.target.value);
+  const currentUsername = localStorage.getItem('username');
+
+  const handleInputChange = (e) => setNewMessage(e.target.value);
+
+  const toggleUsernames = () => {
+    setShowUsernames(!showUsernames);
+    setSelectedMessageIndex(null);  // collapse on toggle
   };
 
-  const handleSendMessage = () => {
-    if (newMessage.trim() !== '') {
-      onSendMessage(newMessage);
+  const handleSendMessage = async () => {
+    if (newMessage.trim() === '' || !selectedContact) return;
+
+    const messagePayload = {
+      sender_id: currentUserId,
+      sender: currentUsername,
+      text: newMessage
+    };
+
+    try {
+      const res = await fetch(`http://127.0.0.1:5000/messages/${selectedContact.chat_id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(messagePayload)
+      });
+
+      if (!res.ok) throw new Error("Failed to send message");
+
+      const timestamp = new Date().toISOString();
+      setMessages(prev => [...prev, { ...messagePayload, timestamp }]);
       setNewMessage('');
+    } catch (err) {
+      console.error("❌ Failed to send message:", err);
     }
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSendMessage();
-    }
+    if (e.key === 'Enter') handleSendMessage();
   };
 
   const parseMessage = (text) => {
@@ -40,7 +66,6 @@ const MessageDisplay = ({ onSendMessage, selectedContact }) => {
   };
 
   const [messages, setMessages] = useState([]);
-  const currentUserId = localStorage.getItem('userId');
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -86,13 +111,16 @@ const MessageDisplay = ({ onSendMessage, selectedContact }) => {
           className={`message ${message.sender_id === currentUserId ? 'user-message' : 'incoming-message'}`}
           onClick={() => setSelectedMessageIndex(index)}
         >
-          <p className="message-sender"><strong>{message.sender}</strong></p>
+          {showUsernames && (
+            <p className="message-sender"><strong>{message.sender}</strong></p>
+          )}
+          
           <div dangerouslySetInnerHTML={{ __html: parseMessage(message.text) }} />
-      
+        
           {showTimestamps && (
             <p className="message-timestamp">{new Date(message.timestamp).toLocaleString()}</p>
           )}
-      
+        
           {selectedMessageIndex === index && (
             <div className="timestamp-toggle">
               <label>
@@ -102,6 +130,14 @@ const MessageDisplay = ({ onSendMessage, selectedContact }) => {
                   onChange={toggleTimestamps}
                 />
                 Hide timestamps
+              </label>
+              <label style={{ marginLeft: '1em' }}>
+                <input
+                  type="checkbox"
+                  checked={!showUsernames}
+                  onChange={toggleUsernames}
+                />
+                Hide usernames
               </label>
             </div>
           )}
