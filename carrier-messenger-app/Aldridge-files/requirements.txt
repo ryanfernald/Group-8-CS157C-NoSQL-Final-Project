@@ -8,3 +8,4 @@ SQLAlchemy     # ORM for interacting with MySQL (optional but recommended)
 Flask-SQLAlchemy # Flask integration for SQLAlchemy (optional)
 Flask-Migrate
 Werkzeug
+python-dateutil 

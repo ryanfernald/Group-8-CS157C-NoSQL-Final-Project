@@ -16,7 +16,7 @@ class Config:
 
         # Token Settings
         # Example: Token valid for 1 day
-        JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=10) # Or hours=1, minutes=30 etc.
+        JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=300) # Or hours=1, minutes=30 etc.
 
     
 

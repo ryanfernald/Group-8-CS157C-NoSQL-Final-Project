@@ -11,9 +11,26 @@ from werkzeug.exceptions import BadRequest, NotFound, Forbidden, InternalServerE
 # Create a Blueprint for chat routes
 chats_bp = Blueprint('chats_bp', __name__, url_prefix='/chats')
 
+# --- ROUTE TO GET USER'S CHATS ---
+@chats_bp.route('', methods=['GET'])
+@token_required # Requires user to be logged in
+def get_user_chat_list(current_user: User):
+    """
+    Retrieves a list of chats the current user is a member of.
+    """
+    # (Code for getting chat list remains the same)
+    current_app.logger.info(f"API: Received request to list chats for user: {current_user.username} (ID: {current_user.user_id})")
+    try:
+        chats = chat_service.get_user_chats(user=current_user)
+        return jsonify(chats=chats), 200
+    except Exception as e:
+        current_app.logger.error(f"API: Unexpected error during chat list retrieval: {e}", exc_info=True)
+        raise InternalServerError("An unexpected error occurred while retrieving chats.")
+
+
 @chats_bp.route('', methods=['POST'])
-@token_required # Apply the decorator - requires valid Bearer token
-def create_new_chat(current_user: User): # Receives current_user from the decorator
+@token_required
+def create_new_chat(current_user: User):
     """ Creates a new chat (one-on-one or group). """
     # (Code for creating chat remains the same)
     current_app.logger.info(f"API: Received request to create chat by user: {current_user.username} (ID: {current_user.user_id})")
@@ -64,21 +81,25 @@ def send_chat_message(current_user: User, chat_id: int):
         raise InternalServerError("An unexpected error occurred while sending the message.")
 
 
-# --- NEW ROUTE FOR GETTING MESSAGES ---
+# --- MODIFIED ROUTE FOR GETTING MESSAGES ---
 @chats_bp.route('/<int:chat_id>/messages', methods=['GET'])
 @token_required # Requires user to be logged in
 def get_chat_messages(current_user: User, chat_id: int):
     """
-    Retrieves recent messages for a specific chat from Redis.
+    Retrieves messages for a specific chat.
+    Fetches recent from Redis if 'before_timestamp' is not provided.
+    Fetches older from MySQL if 'before_timestamp' is provided.
     Optionally accepts 'limit' query parameter.
     """
     current_app.logger.info(f"API: Received request to get messages for Chat {chat_id} by User {current_user.user_id}")
 
-    # Get limit from query parameters, default to DEFAULT_MESSAGE_LIMIT
+    # Get optional query parameters
+    before_timestamp_str = request.args.get('before_timestamp', None) # Get timestamp string or None
+    limit_str = request.args.get('limit', str(message_service.DEFAULT_MESSAGE_LIMIT)) # Get limit string or default
+
+    # Validate limit parameter
     try:
-        # Use the constant defined in the service or define one here/in config
-        # Ensure message_service is imported if using its constant
-        limit = int(request.args.get('limit', message_service.DEFAULT_MESSAGE_LIMIT))
+        limit = int(limit_str)
         if limit <= 0:
             raise ValueError("Limit must be positive.")
     except ValueError:
@@ -86,26 +107,27 @@ def get_chat_messages(current_user: User, chat_id: int):
 
     # --- Call Service ---
     try:
-        # Currently only fetching from Redis (most recent)
-        messages = message_service.get_recent_messages(
+        # Call the unified get_messages service function, passing the timestamp string
+        messages = message_service.get_messages(
             requester=current_user,
             chat_id=chat_id,
+            before_timestamp_str=before_timestamp_str, # Pass the string or None
             limit=limit
         )
         # Return the list of messages
-        # Note: Messages are returned newest-first from LRANGE
+        # Note: Messages are returned newest-first
         return jsonify(messages=messages), 200 # 200 OK
 
     except Forbidden as e:
-        # User is not a member of the chat
         current_app.logger.warning(f"API: Get messages forbidden for User {current_user.user_id} in Chat {chat_id}: {e.description}")
-        return jsonify(error=e.description), 403 # 403 Forbidden
+        return jsonify(error=e.description), 403
+    except BadRequest as e: # Catch potential timestamp format error from service
+         current_app.logger.warning(f"API: Bad request for getting messages for Chat {chat_id}: {e.description}")
+         return jsonify(error=e.description), 400
     except ServiceUnavailable as e:
-        # Handle Redis connection issues from the service
         current_app.logger.error(f"API: Get messages failed due to service unavailable: {e.description}")
-        return jsonify(error=e.description), 503 # 503 Service Unavailable
+        return jsonify(error=e.description), 503
     except Exception as e:
-        # Handle other unexpected errors from the service (log them!)
         current_app.logger.error(f"API: Unexpected error during message retrieval for chat {chat_id}: {e}", exc_info=True)
         raise InternalServerError("An unexpected error occurred while retrieving messages.")
 

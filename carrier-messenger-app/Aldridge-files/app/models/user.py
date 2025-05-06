@@ -7,17 +7,17 @@ from werkzeug.security import generate_password_hash, check_password_hash
 class User(db.Model):
     __tablename__ = 'users'
 
-    # --- THIS LINE IS CRITICAL ---
-    user_id = db.Column(db.Integer, primary_key=True) # Ensure primary_key=True is correct
-    # --- END CRITICAL LINE ---
-
+    user_id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(256), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    memberships = db.relationship('ChatMember', back_populates='user', lazy='dynamic', cascade="all, delete-orphan")
-    messages_sent = db.relationship('Message', back_populates='sender', lazy='dynamic')
+    # Relationships
+    # Removed lazy='dynamic'
+    memberships = db.relationship('ChatMember', back_populates='user', cascade="all, delete-orphan")
+    # Removed lazy='dynamic'
+    messages_sent = db.relationship('Message', back_populates='sender')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
