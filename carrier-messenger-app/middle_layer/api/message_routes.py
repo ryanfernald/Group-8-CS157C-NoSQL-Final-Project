@@ -113,3 +113,37 @@ def create_chat():
         "chat_id": chat_id,
         "created_with": participant_usernames[1:]
     }), 201
+
+
+########### Delete Message Router ##########
+
+@message_bp.route('/delete-participant', methods=['POST'])
+@cross_origin()
+def delete_participant():
+    data = request.get_json()
+    user_id = data.get('user_id')
+    chat_id = data.get('chat_id')
+
+    if not user_id or not chat_id:
+        return jsonify({"message": "Missing user_id or chat_id"}), 400
+
+    token_key = f"message_token:{chat_id}"
+    if not r.exists(token_key):
+        return jsonify({"message": "Chat does not exist"}), 404
+
+    participants_raw = r.hget(token_key, "participants")
+    if not participants_raw:
+        return jsonify({"message": "Participants not found"}), 404
+
+    participants = participants_raw.split(',')
+    if user_id not in participants:
+        return jsonify({"message": "User is not in this chat"}), 400
+
+    participants.remove(user_id)
+
+    if participants:
+        r.hset(token_key, "participants", ",".join(participants))
+    else:
+        r.delete(token_key)  # Remove entire chat if no one is left
+
+    return jsonify({"message": "User removed from chat"}), 200
