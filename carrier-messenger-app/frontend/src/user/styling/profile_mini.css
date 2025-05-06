@@ -1,7 +1,7 @@
 .profile-mini {
   display: flex;
   align-items: center;
-  padding: 10px;
+  padding: 5px;
   background-color: #6d7094;
   color: black;
   cursor: pointer;
@@ -20,6 +20,6 @@
 }
 
 .profile-mini-username {
-  font-size: 1rem;
+  font-size: 18px;
   font-weight: bold;
 }

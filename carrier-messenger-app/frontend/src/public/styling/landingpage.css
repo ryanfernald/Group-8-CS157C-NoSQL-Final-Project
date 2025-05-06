@@ -58,7 +58,7 @@ h2 {
 }
 
 .login-btn, .signup-btn {
-    width: 80%;
+    /* width: 80%; */
     padding: 10px;
     margin: 10px 0;
     border: none;
@@ -70,11 +70,13 @@ h2 {
 .login-btn {
     background-color: #267b88;
     color: white;
+    width: 100%;
 }
 
 .signup-btn {
     background-color: #7f6d92;
     color: white;
+    width: 53%;
 }
 
 .signup-text {
