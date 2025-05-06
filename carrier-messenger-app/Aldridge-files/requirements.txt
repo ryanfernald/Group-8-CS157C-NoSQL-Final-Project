@@ -9,3 +9,4 @@ Flask-SQLAlchemy # Flask integration for SQLAlchemy (optional)
 Flask-Migrate
 Werkzeug
 python-dateutil 
+Flask-APScheduler
