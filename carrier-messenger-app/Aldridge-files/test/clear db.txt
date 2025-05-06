@@ -1,0 +1,7 @@
+SET FOREIGN_KEY_CHECKS = 0; -- Disable checks temporarily
+TRUNCATE TABLE messages;
+TRUNCATE TABLE chat_members;
+TRUNCATE TABLE chats;
+TRUNCATE TABLE users;
+-- Don't truncate alembic_version if you want to keep migration history
+SET FOREIGN_KEY_CHECKS = 1; -- Re-enable checks
