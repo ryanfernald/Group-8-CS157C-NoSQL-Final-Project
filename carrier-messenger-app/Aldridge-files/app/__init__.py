@@ -76,7 +76,7 @@ def create_app(config_class=Config):
 
         # Check if job already exists before adding (optional, good practice)
         if not scheduler.get_job('flush_redis_to_mysql'):
-             scheduler.add_job(id='flush_redis_to_mysql', func=flush_service.flush_job, trigger='interval', minutes=2)
+             scheduler.add_job(id='flush_redis_to_mysql', func=flush_service.flush_job, trigger='interval', minutes=1)
              log.info("Added APScheduler job 'flush_redis_to_mysql'.")
         else:
              log.info("APScheduler job 'flush_redis_to_mysql' already exists.")

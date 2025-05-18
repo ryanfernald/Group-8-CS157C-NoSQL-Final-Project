@@ -10,8 +10,8 @@ import uuid # For generating unique passwords/emails if needed
 # --- Configuration ---
 API_BASE_URL = "http://localhost:5000"
 TEXT_FILE_PATH = "1524-0.txt" # Assumes Hamlet text file is in the same directory
-VERBOSE_LOGGING = False
-API_DELAY = 0 # Seconds between API calls to be gentle and allow observation
+VERBOSE_LOGGING = True
+API_DELAY = 0.02 # Seconds between API calls to be gentle and allow observation
 SKIP_ACT_SCENE_LINES = True # Skip lines like "ACT I", "SCENE I." as messages
 
 # --- Global Data Storage ---
