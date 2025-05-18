@@ -1,12 +1,12 @@
-# requirements.txt
+# Python dependencies required to run the Flask chat application
 flask
 redis
-python-dotenv # To load .env file for configuration
-gunicorn      # WSGI server to run Flask in the container
-mysql-connector-python # MySQL driver
-SQLAlchemy     # ORM for interacting with MySQL (optional but recommended)
-Flask-SQLAlchemy # Flask integration for SQLAlchemy (optional)
+python-dotenv
+gunicorn
+mysql-connector-python
+SQLAlchemy
+Flask-SQLAlchemy
 Flask-Migrate
 Werkzeug
-python-dateutil 
+python-dateutil
 Flask-APScheduler

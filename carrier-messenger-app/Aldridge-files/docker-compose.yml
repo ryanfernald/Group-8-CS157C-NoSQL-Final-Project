@@ -1,41 +1,46 @@
 services:
+
+  # Flask application container
   flask_app:
-    build: . # Build the image from the Dockerfile in the current directory
+    build: .
     container_name: flask_chat_app
     ports:
-      - "5000:5000" # Map host port 5000 to container port 5000
+      - "5000:5000"
     volumes:
-      - .:/app # Mount current directory into /app in container (for development)
+      - .:/app
     env_file:
-      - .env # Load environment variables from .env file
+      - .env
     depends_on:
       - redis_db
       - mysql_db
     restart: unless-stopped
 
+  # Redis container for message queue and caching
   redis_db:
-    image: redis:alpine # Use the official Redis image (Alpine version is small)
+    image: redis:alpine
     container_name: redis_chat_db
     volumes:
-      - redis_data:/data # Persist Redis data
+      - redis_data:/data
     restart: unless-stopped
-    ports: # Only uncomment if you need to access Redis directly from your host machine
+    ports:
       - "6379:6379"
 
+  # MySQL container for persistent relational storage
   mysql_db:
-    image: mysql:8.0 # Use an official MySQL image
+    image: mysql:8.0
     container_name: mysql_chat_db
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD} # Get from .env
-      MYSQL_DATABASE: ${MYSQL_DATABASE}           # Get from .env
-      MYSQL_USER: ${MYSQL_USER}                   # Get from .env
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}           # Get from .env
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
-      - mysql_data:/var/lib/mysql # Persist MySQL data
+      - mysql_data:/var/lib/mysql
     restart: unless-stopped
-    ports: # Only uncomment if you need to access MySQL directly from your host machine
+    ports:
       - "3306:3306"
 
+# Persistent storage volumes for Redis and MySQL
 volumes:
-  redis_data: # Define the named volume for Redis
-  mysql_data: # Define the named volume for MySQL
+  redis_data:
+  mysql_data:

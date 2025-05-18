@@ -1,7 +1,5 @@
 # File: play_simulator.py
-# Parses a play, simulates chat creation, message sending,
-# immediate recent reads, and subsequent historical reads.
-# Enhanced token management, chat reuse, and character parsing.
+# This script parses a play and simulates chat interactions using my API.
 
 import requests
 import json
@@ -12,32 +10,26 @@ import os
 import traceback
 import random
 
-# --- Configuration ---
+# Configuration settings for the simulation.
 API_BASE_URL = "http://localhost:5000"
-
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-TEXT_FILE_NAME = "pg2242.txt" # A Midsummer Night's Dream
+TEXT_FILE_NAME = "pg2242.txt"
 TEXT_FILE_PATH = os.path.join(SCRIPT_DIR, TEXT_FILE_NAME)
-
 VERBOSE_SIMULATION_LOGS = True
-DEBUG_API_CALLS = False # Set to True for detailed API req/resp logs
-
+DEBUG_API_CALLS = False
 API_DELAY = 0
 SKIP_ACT_SCENE_LINES = True
-
 SIMULATE_READING_AFTER_SEND = True
 SIMULATE_HISTORICAL_READING_END = True
-MAX_HISTORICAL_READS_PER_CHAT = 2 # Reduced for quicker demo
+MAX_HISTORICAL_READS_PER_CHAT = 2
 DELAY_BETWEEN_READ_ACTIONS = 0.001
 
-# --- Global Data Storage ---
-registered_characters = {} # {"CHARACTER_NAME_UPPER": {"user_id": id, "username": "CHARACTER_NAME_UPPER", ...}}
-# {tuple(sorted(user_id1, user_id2)): {"chat_id": id, "name": "...", "member_ids": [...]}}
+# Global storage for characters and chats.
+registered_characters = {}
 active_1on1_chats = {}
-# {scene_key: {"chat_id": id, "name": "...", "member_ids": [...]}}
 active_group_chats = {}
 
-# --- Helper Functions ---
+# Logs high-level simulation actions.
 def log_sim_action(actor, action, details=""):
     if VERBOSE_SIMULATION_LOGS:
         timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -45,11 +37,12 @@ def log_sim_action(actor, action, details=""):
         details_str = f" ({details})" if details else ""
         print(f"[{timestamp}] SIM EVENT: Actor='{actor_str}', Action='{action}'{details_str}")
 
+# Makes API calls, with retry logic for token expiration.
 def api_call(method, endpoint, data=None, headers=None, character_details_for_retry=None, original_call_args=None):
     url = f"{API_BASE_URL}{endpoint}"
     actor_name = character_details_for_retry["username"] if character_details_for_retry else "SCRIPT"
     if DEBUG_API_CALLS:
-        log_sim_action(f"API_CALL ({actor_name})", f"{method} {url}") # Log API calls if debug is on
+        log_sim_action(f"API_CALL ({actor_name})", f"{method} {url}")
         if data: log_sim_action(f"API_DATA ({actor_name})", json.dumps(data))
         if headers:
             safe_headers = {k: (v[:15] + "...'" if k == 'Authorization' and len(v) > 20 else v) for k, v in headers.items()}
@@ -61,13 +54,14 @@ def api_call(method, endpoint, data=None, headers=None, character_details_for_re
             if response.content:
                 try: log_sim_action(f"API_BODY ({actor_name})", response.json())
                 except json.JSONDecodeError: log_sim_action(f"API_BODY_TEXT ({actor_name})", response.text[:100]+"...")
+        
         if response.status_code == 401 and headers and 'Authorization' in headers and character_details_for_retry and original_call_args:
             log_sim_action(character_details_for_retry["username"], "Token expired/invalid (401). Attempting re-login.")
             new_original_call_args = original_call_args.copy(); new_original_call_args.pop('character_details_for_retry', None); new_original_call_args.pop('original_call_args', None)
             if login_character_by_details(character_details_for_retry) and registered_characters[character_details_for_retry["username"]].get("token"):
                 new_headers = headers.copy(); new_headers['Authorization'] = f"Bearer {registered_characters[character_details_for_retry['username']]['token']}"
                 log_sim_action(character_details_for_retry["username"], "Re-login successful. Retrying original API call.")
-                return api_call(method, endpoint, data=data, headers=new_headers) # No retry args on the retry
+                return api_call(method, endpoint, data=data, headers=new_headers)
             else: log_sim_action(character_details_for_retry["username"], "Re-login failed. Original action cannot be retried."); return response
         time.sleep(API_DELAY)
         return response
@@ -75,6 +69,7 @@ def api_call(method, endpoint, data=None, headers=None, character_details_for_re
         log_sim_action(actor_name, f"API Call Error for {method} {url}", str(e))
         return None
 
+# Logs in a character using their stored details if their token expired.
 def login_character_by_details(char_details):
     if not (char_details and char_details.get("username") and char_details.get("password")):
         log_sim_action("SCRIPT_ERROR", "Cannot re-login: missing username or password in char_details."); return False
@@ -87,17 +82,18 @@ def login_character_by_details(char_details):
         if token: registered_characters[character_name]["token"] = token; log_sim_action(character_name, "Re-login successful. Token updated."); return True
     log_sim_action(character_name, "Re-login failed.", f"Status: {login_response.status_code if login_response else 'No Response'}"); return False
 
+# Finds character details in my global store by their user_id.
 def get_character_details_by_id(user_id):
     for details in registered_characters.values():
         if details.get("user_id") == user_id: return details
     return None
 
+# Registers a character from the play as a user and logs them in.
 def register_character(character_name_raw):
     character_name = character_name_raw.strip().upper()
-    # More strict filtering for what constitutes a character name
     if not character_name or not re.fullmatch(r"[A-Z\s\'\-\.]+", character_name) or \
        character_name in ["PROLOGUE", "EPILOGUE", "CONTENTS", "ACT", "SCENE", "ALL", "OTHERS", "MUSICK", "SONG"] or \
-       len(character_name.split()) > 3 or len(character_name) < 2 : # Avoid long sentences as names
+       len(character_name.split()) > 3 or len(character_name) < 2 :
         return None
     if character_name in registered_characters and registered_characters[character_name].get("token") and registered_characters[character_name].get("user_id"):
         return registered_characters[character_name]
@@ -106,14 +102,17 @@ def register_character(character_name_raw):
     email_safe_name = re.sub(r'\W+', '', character_name.lower())
     email = f"{email_safe_name}_{uuid.uuid4().hex[:4]}@play-simulation.com"
     password = f"password_{email_safe_name}"
+    
     if character_name not in registered_characters:
         registered_characters[character_name] = {"username": character_name, "email": email, "password": password}
     else:
         registered_characters[character_name].setdefault("username", character_name)
         registered_characters[character_name].setdefault("email", email)
         registered_characters[character_name].setdefault("password", password)
+
     reg_data = {"username": character_name, "email": email, "password": password}
     reg_response = api_call("POST", "/auth/register", data=reg_data)
+
     if reg_response and reg_response.status_code == 201:
         user_info = reg_response.json().get("user", {}); user_id = user_info.get("user_id")
         log_sim_action(character_name, "Registered successfully", f"ID: {user_id}")
@@ -122,6 +121,7 @@ def register_character(character_name_raw):
         log_sim_action(character_name, "Likely already exists (409)", "Attempting login")
     else:
         log_sim_action(character_name, "Registration failed", f"Status: {reg_response.status_code if reg_response else 'No Response'}"); return None
+    
     if login_character_by_details(registered_characters[character_name]):
         if not registered_characters[character_name].get("user_id") and registered_characters[character_name].get("token"):
             verify_headers = {"Authorization": f"Bearer {registered_characters[character_name]['token']}"}
@@ -133,9 +133,11 @@ def register_character(character_name_raw):
                     log_sim_action(character_name, "User ID confirmed via token verify", f"ID: {user_id_from_verify}")
                 else: log_sim_action(character_name, "Verify did not return user_id")
             else: log_sim_action(character_name, "Verify call failed after login")
+        
         if registered_characters[character_name].get("user_id"): return registered_characters[character_name]
     log_sim_action(character_name, "Could not establish full user details (ID and Token)."); return None
 
+# Gets an existing 1-on-1 chat or creates a new one.
 def get_or_create_1on1_chat(user1_details, user2_details):
     if not all(d and d.get("user_id") and d.get("token") and d.get("username") for d in [user1_details, user2_details]):
         log_sim_action("1ON1_CHAT_CREATION", "Failed: Missing user details for one or both users.")
@@ -158,8 +160,7 @@ def get_or_create_1on1_chat(user1_details, user2_details):
         for chat in existing_chats:
             if not chat.get("is_group_chat"):
                 member_ids_in_chat = {member["user_id"] for member in chat.get("members", [])}
-                # Check if the chat is strictly between user1 and user2
-                if member_ids_in_chat == {user1_id, user2_id}: # Exact match of the two members
+                if member_ids_in_chat == {user1_id, user2_id}:
                     chat_name_from_api = chat.get("chat_name", f"{user1_name} & {user2_name}")
                     chat_info = {"chat_id": chat["chat_id"], "name": chat_name_from_api, "member_ids": list(member_ids_in_chat)}
                     active_1on1_chats[chat_pair_key] = chat_info
@@ -171,7 +172,7 @@ def get_or_create_1on1_chat(user1_details, user2_details):
 
     chat_name_to_create = f"{user1_name} & {user2_name}"
     log_sim_action(user1_name, f"Creating NEW 1-on-1 chat with {user2_name}")
-    chat_data = {"participant_ids": [user2_id], "is_group": False} # API expects other participant
+    chat_data = {"participant_ids": [user2_id], "is_group": False}
     chat_response = api_call("POST", "/chats", data=chat_data, headers=headers1, character_details_for_retry=user1_details, original_call_args={"method":"POST", "endpoint":"/chats", "data":chat_data, "headers":headers1})
     if chat_response and chat_response.status_code == 201:
         chat_id = chat_response.json().get("chat", {}).get("chat_id")
@@ -183,16 +184,14 @@ def get_or_create_1on1_chat(user1_details, user2_details):
     log_sim_action(user1_name, f"Failed to create 1-on-1 chat with {user2_name}")
     return None
 
+# Creates a group chat for a scene.
 def create_group_chat(creator_details, participant_details_list, scene_key):
     if not creator_details or not creator_details.get("user_id") or not creator_details.get("token"):
         log_sim_action("GROUP_CHAT_CREATION", "Failed: Missing creator details/ID/token"); return None
-    
-    # Ensure participant_details_list contains dictionaries with "user_id"
     participant_ids = [p["user_id"] for p in participant_details_list if p and p.get("user_id") and p["user_id"] != creator_details["user_id"]]
-    if not participant_ids: # Group needs at least one *other* participant
+    if not participant_ids:
         log_sim_action(creator_details["username"], f"Failed to create group for scene '{scene_key}': No other valid participants found.")
         return None
-
     actual_group_name = scene_key.replace("_", " ") + " Group"
     log_sim_action(creator_details["username"], f"Creating group chat '{actual_group_name}' for scene '{scene_key}'")
     chat_data = {"participant_ids": participant_ids, "is_group": True, "chat_name": actual_group_name}
@@ -209,6 +208,7 @@ def create_group_chat(creator_details, participant_details_list, scene_key):
     log_sim_action(creator_details["username"], f"Failed to create group chat '{actual_group_name}' for scene '{scene_key}'")
     return None
 
+# Simulates another user in the chat reading recent messages.
 def simulate_immediate_read(chat_id, chat_name, members_in_chat_ids, sender_id):
     if not SIMULATE_READING_AFTER_SEND or not members_in_chat_ids: return
     other_members = [uid for uid in members_in_chat_ids if uid != sender_id]
@@ -222,6 +222,7 @@ def simulate_immediate_read(chat_id, chat_name, members_in_chat_ids, sender_id):
         time.sleep(DELAY_BETWEEN_READ_ACTIONS / 2)
     else: log_sim_action("SCRIPT_ERROR", f"Could not find token for reader ID {reader_id} for immediate read in chat {chat_id}")
 
+# Sends a message to a specified chat and simulates an immediate read.
 def send_message_to_chat(chat_id, chat_name, sender_details, content, members_in_chat_ids):
     if not content or not sender_details or not sender_details.get("token") or not sender_details.get("username") or not chat_id:
         log_sim_action("MESSAGE_SENDING", "Failed: Missing critical info (content, sender details, token, username, or chat_id)")
@@ -237,10 +238,11 @@ def send_message_to_chat(chat_id, chat_name, sender_details, content, members_in
         simulate_immediate_read(chat_id, chat_name, members_in_chat_ids, sender_details["user_id"])
     return success
 
+# Parses the "Dramatis Personae" to identify and register main characters.
 def parse_dramatis_personae(lines):
     log_sim_action("SCRIPT", "Parsing Dramatis Personae")
     in_dramatis_section = False; character_names = []
-    char_regex = re.compile(r"^([A-Z][A-Z\s\-\'\.]{1,})(?:,|\s\(|\s\–|\s—|$)") # More specific, looks for name enders
+    char_regex = re.compile(r"^([A-Z][A-Z\s\-\'\.]{1,})(?:,|\s\(|\s\–|\s—|$)")
     excluded_titles_etc = ["SCENE", "CONTENTS", "ACT", "THE LATE", "DANISH CAPTAIN", "ENGLISH", "LORDS", "LADIES", "OFFICERS", "SOLDIERS", "SAILORS", "MESSENGERS", "ATTENDANTS", "PLAYERS", "TWO", "A", "GHOST", "PROLOGUE", "EPILOGUE", "ALL", "OTHERS", "HIS", "HER", "SON", "DAUGHTER", "WIFE", "FRIEND", "SERVANT", "TO"]
     for line_num, line_content in enumerate(lines):
         line_strip = line_content.strip()
@@ -251,23 +253,23 @@ def parse_dramatis_personae(lines):
                 if line_strip.startswith(("SCENE.", "ACT I", "PROLOGUE", "THE SCENE")): log_sim_action("SCRIPT", f"Dramatis Personae section ended at line {line_num + 1} due to marker: {line_strip}"); break
             if not line_strip and line_num + 1 < len(lines):
                  if any(marker in lines[line_num+1] for marker in ["SCENE.", "ACT I", "PROLOGUE"]): log_sim_action("SCRIPT", f"Dramatis Personae section ended at line {line_num + 1} (blank) due to upcoming marker."); break
-            
+            if not char_regex.match(line_strip) and len(line_strip) > 0 and not line_strip[0].islower():
+                if len(character_names) > 3: log_sim_action("SCRIPT", f"Dramatis Personae section likely ended at line {line_num + 1} (format change): {line_strip}"); break
             match = char_regex.match(line_strip)
             if match:
                 name = match.group(1).strip().upper()
-                # Clean titles and descriptions
                 for title in excluded_titles_etc + ["KING", "QUEEN", "PRINCE", "PRINCESS", "DUKE", "DUCHESS", "LORD", "LADY", "SIR", "MISTRESS", "MASTER", "FAIRY"]:
                     name = re.sub(r'\b' + re.escape(title) + r'\b', '', name, flags=re.IGNORECASE).strip()
                 name = re.sub(r'\s*OF\s*[A-Z\s]+$', '', name, flags=re.IGNORECASE).strip()
-                name = re.sub(r'[,\.]+$', '', name).strip()
-                name = ' '.join(name.split()) # Normalize multiple spaces
+                name = re.sub(r'[,\.]+$', '', name).strip(); name = ' '.join(name.split());
                 if name and name not in excluded_titles_etc and len(name) > 1 and not name.isdigit() and " AND " not in name:
-                    character_names.append(name)
+                    character_names.append(name) # Store as initially parsed (upper)
     unique_names = sorted(list(set(character_names)))
     log_sim_action("SCRIPT", f"Found characters in Dramatis Personae: {unique_names}")
-    for name in unique_names: register_character(name)
+    for name in unique_names: register_character(name) # register_character will .upper() it
     log_sim_action("SCRIPT", "Finished pre-registering characters from Dramatis Personae.")
 
+# Processes the entire play text line by line.
 def process_play_text(file_path):
     log_sim_action("SCRIPT", f"Starting to process play text: {file_path}")
     try:
@@ -289,7 +291,7 @@ def process_play_text(file_path):
             break
     if not found_dramatis_start: log_sim_action("SCRIPT", "Dramatis Personae section not found or not clearly identified.")
 
-    character_line_regex = re.compile(r"^\s*([A-Z][A-Za-z\s\-\'\.]{1,})\.\s*$") # Speaker. (e.g., THESEUS.)
+    character_line_regex = re.compile(r"^\s*([A-Z][A-Za-z\s\-\'\.]{1,})\.\s*$") 
     stage_direction_regex = re.compile(r"^\s*\[.*?\]\s*$")
     scene_act_regex = re.compile(r"^\s*(ACT\s+[IVXLCDM]+|SCENE\s+[IVXLCDM]+|PROLOGUE|EPILOGUE)\b", re.IGNORECASE)
 
@@ -304,98 +306,85 @@ def process_play_text(file_path):
             if line.strip().startswith(("ACT I", "SCENE I.")): start_line_index = i; break
     log_sim_action("SCRIPT", f"Starting main dialogue parsing from line {start_line_index}")
 
+    # This loop identifies speakers and their dialogue.
     for i in range(start_line_index, len(lines)):
         line = lines[i]; stripped_line = line.strip()
         if not stripped_line: continue
 
+        # Handles scene changes and sets up scene context.
         if scene_act_regex.match(stripped_line):
             log_sim_action("SCENE_CHANGE", stripped_line)
-            if current_speaker_details and current_dialogue_lines: # Send pending dialogue
+            if current_speaker_details and current_dialogue_lines:
                 if current_1on1_chat_info: send_message_to_chat(current_1on1_chat_info["chat_id"], current_1on1_chat_info["name"], current_speaker_details, " ".join(current_dialogue_lines), current_1on1_chat_info["member_ids"])
                 if current_scene_group_chat_info: send_message_to_chat(current_scene_group_chat_info["chat_id"], current_scene_group_chat_info["name"], current_speaker_details, " ".join(current_dialogue_lines), current_scene_group_chat_info["member_ids"])
-            
-            current_scene_key = stripped_line.replace(" ", "_").replace(".","").upper() # Consistent key
-            current_scene_speakers_details = [] # Reset speakers for new scene
-            current_scene_group_chat_info = active_group_chats.get(current_scene_key) # Check if group chat for this scene already exists
+            current_scene_key = stripped_line.replace(" ", "_").replace(".","").upper()
+            current_scene_speakers_details = []
+            current_scene_group_chat_info = active_group_chats.get(current_scene_key)
             if current_scene_group_chat_info:
                  log_sim_action("SCRIPT", f"Rejoining existing group chat for scene '{current_scene_group_chat_info['name']}' (ID: {current_scene_group_chat_info['chat_id']})")
             else:
                  log_sim_action("SCRIPT", f"New scene '{current_scene_key}', group chat to be formed.")
-            
             current_dialogue_lines = []; previous_speaker_details = None; current_speaker_details = None; current_1on1_chat_info = None
             continue
 
+        # Handles stage directions, sending pending dialogue.
         if stage_direction_regex.match(stripped_line):
-            if current_speaker_details and current_dialogue_lines: # Send pending dialogue
+            if current_speaker_details and current_dialogue_lines:
                 if current_1on1_chat_info: send_message_to_chat(current_1on1_chat_info["chat_id"], current_1on1_chat_info["name"], current_speaker_details, " ".join(current_dialogue_lines), current_1on1_chat_info["member_ids"])
                 if current_scene_group_chat_info: send_message_to_chat(current_scene_group_chat_info["chat_id"], current_scene_group_chat_info["name"], current_speaker_details, " ".join(current_dialogue_lines), current_scene_group_chat_info["member_ids"])
             current_dialogue_lines = []
-            if "[_Exit" in stripped_line or "[_Exeunt" in stripped_line: current_speaker_details = None # Character leaves current context
+            if "[_Exit" in stripped_line or "[_Exeunt" in stripped_line: current_speaker_details = None
             continue
 
         char_match = character_line_regex.match(stripped_line)
+        # This block processes a line identified as a speaker.
         if char_match:
             new_speaker_name_raw = char_match.group(1).strip().upper()
             new_speaker_details = registered_characters.get(new_speaker_name_raw)
-            
-            if not new_speaker_details: # Try to register on-the-fly if it seems like a valid name
+            if not new_speaker_details:
                 if len(new_speaker_name_raw) > 1 and (new_speaker_name_raw.isupper() or len(new_speaker_name_raw.split()) > 1 or new_speaker_name_raw in ["PUCK"]) and \
                    new_speaker_name_raw not in ["ACT", "SCENE", "PROLOGUE", "EPILOGUE"] and \
                    not any(kw in new_speaker_name_raw for kw in ["AMBASSADORS", "ATTENDANTS", "LORDS", "LADIES"]):
                     new_speaker_details = register_character(new_speaker_name_raw)
-                if not new_speaker_details: # If still not registered, treat as dialogue
+                if not new_speaker_details:
                     if current_speaker_details: current_dialogue_lines.append(stripped_line)
                     continue
             
-            # Add to current scene's speakers if not already there and valid
             if new_speaker_details.get("user_id") and new_speaker_details not in current_scene_speakers_details:
                  current_scene_speakers_details.append(new_speaker_details)
 
-            # Create/Update Scene Group Chat
-            if len(current_scene_speakers_details) >= 2 and not current_scene_group_chat_info: # Need at least 2 for a group
-                if not active_group_chats.get(current_scene_key): # Create only if not exists for this scene
-                    # First speaker in the list can be the "creator" for API call
+            if len(current_scene_speakers_details) >= 2 and not current_scene_group_chat_info:
+                if not active_group_chats.get(current_scene_key):
                     creator_for_group = current_scene_speakers_details[0]
-                    # Other participants are the rest of the speakers identified *so far* in this scene
                     other_participants_for_group = [spd for spd in current_scene_speakers_details if spd.get("user_id") != creator_for_group.get("user_id")]
-                    if other_participants_for_group: # Must have at least one OTHER participant
+                    if other_participants_for_group: 
                          current_scene_group_chat_info = create_group_chat(creator_for_group, other_participants_for_group, current_scene_key)
-                else: # Group chat for this scene already exists from a previous run or earlier in this run
-                    current_scene_group_chat_info = active_group_chats[current_scene_key]
+                else: current_scene_group_chat_info = active_group_chats[current_scene_key]
 
-            # Speaker Change Logic
             if current_speaker_details and current_speaker_details.get("user_id") != new_speaker_details.get("user_id"):
-                if current_dialogue_lines: # Send previous speaker's lines
+                if current_dialogue_lines:
                     if current_1on1_chat_info: send_message_to_chat(current_1on1_chat_info["chat_id"], current_1on1_chat_info["name"], current_speaker_details, " ".join(current_dialogue_lines), current_1on1_chat_info["member_ids"])
                     if current_scene_group_chat_info: send_message_to_chat(current_scene_group_chat_info["chat_id"], current_scene_group_chat_info["name"], current_speaker_details, " ".join(current_dialogue_lines), current_scene_group_chat_info["member_ids"])
                 current_dialogue_lines = []
                 previous_speaker_details = current_speaker_details
-            
-            current_speaker_details = new_speaker_details # Update current speaker
-
-            # Establish/Re-establish 1-on-1 chat
+            current_speaker_details = new_speaker_details
             if previous_speaker_details and current_speaker_details.get("user_id") != previous_speaker_details.get("user_id"):
                 current_1on1_chat_info = get_or_create_1on1_chat(previous_speaker_details, current_speaker_details)
-            elif not previous_speaker_details and current_speaker_details: # First speaker in a sequence
-                 previous_speaker_details = current_speaker_details
-                 current_1on1_chat_info = None # No 1-on-1 chat yet
-        
-        elif current_speaker_details: # This line is dialogue for the current_speaker_name
+            elif not previous_speaker_details and current_speaker_details:
+                 previous_speaker_details = current_speaker_details; current_1on1_chat_info = None
+        # This block collects dialogue lines for the current speaker.
+        elif current_speaker_details:
             dialogue_part = line.strip()
             if dialogue_part: current_dialogue_lines.append(dialogue_part)
-        # else:
-            # log_sim_action("SCRIPT", "Skipping line (no current speaker or not dialogue)", stripped_line[:50])
 
-
-    # Send any remaining dialogue after the loop finishes
+    # Sends any final dialogue after processing all lines.
     if current_speaker_details and current_dialogue_lines:
         if current_1on1_chat_info: send_message_to_chat(current_1on1_chat_info["chat_id"], current_1on1_chat_info["name"], current_speaker_details, " ".join(current_dialogue_lines), current_1on1_chat_info["member_ids"])
         if current_scene_group_chat_info: send_message_to_chat(current_scene_group_chat_info["chat_id"], current_scene_group_chat_info["name"], current_speaker_details, " ".join(current_dialogue_lines), current_scene_group_chat_info["member_ids"])
     log_sim_action("SCRIPT", "Finished processing play text.")
 
-
+# Simulates users reading historical messages from chats.
 def simulate_historical_message_reading():
-    # (Keep this function as is from the last correct version)
     if not SIMULATE_HISTORICAL_READING_END: return
     log_sim_action("SCRIPT", "Starting HISTORICAL message reading simulation phase...")
     all_simulated_chats_info = list(active_1on1_chats.values()) + list(active_group_chats.values())
@@ -427,9 +416,8 @@ def simulate_historical_message_reading():
                 time.sleep(DELAY_BETWEEN_READ_ACTIONS)
         else: log_sim_action("SCRIPT_ERROR", f"Could not find token for reader ID {reader_id} for historical read in chat {chat_id}")
 
-# --- Main Execution ---
+# Main entry point for the script.
 if __name__ == "__main__":
-    # (Keep main execution block as is)
     log_sim_action("SCRIPT", "--- SCRIPT START ---")
     print("Ensure your Flask backend API (http://localhost:5000) is running in Docker.")
     start_script = input("Press Enter to start the Play Simulator (or 'q' to quit)...")

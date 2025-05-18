@@ -1,9 +1,8 @@
-# File: your_chat_project/app/models/user.py
-
 from app import db
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
+# Defines the User model with authentication and relationship helpers
 class User(db.Model):
     __tablename__ = 'users'
 
@@ -13,10 +12,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationships
-    # Removed lazy='dynamic'
     memberships = db.relationship('ChatMember', back_populates='user', cascade="all, delete-orphan")
-    # Removed lazy='dynamic'
     messages_sent = db.relationship('Message', back_populates='sender')
 
     def set_password(self, password):

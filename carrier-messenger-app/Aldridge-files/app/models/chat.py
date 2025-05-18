@@ -1,8 +1,7 @@
-# File: your_chat_project/app/models/chat.py
-
 from app import db
 from datetime import datetime
 
+# Defines the Chat model representing group or one-on-one chat sessions
 class Chat(db.Model):
     __tablename__ = 'chats'
 
@@ -11,10 +10,7 @@ class Chat(db.Model):
     chat_name = db.Column(db.String(100), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationships
-    # Removed lazy='dynamic' from the 'members' collection
     members = db.relationship('ChatMember', back_populates='chat', cascade="all, delete-orphan")
-    # Removed lazy='dynamic' from the 'messages' collection (good practice if you might eager load it later)
     messages = db.relationship('Message', back_populates='chat', cascade="all, delete-orphan")
 
     def __repr__(self):
