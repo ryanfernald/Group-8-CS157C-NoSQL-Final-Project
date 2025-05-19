@@ -8,15 +8,16 @@ Building a Full Stack Messaging Application with React, Flask and a Redis NoSQL 
 
 ## 📚 Table of Contents
 
+- [Carrier Messenger App](#carrier-messenger-app)
+  - [📚 Table of Contents](#-table-of-contents)
 - [About the Project](#about-the-project)
 - [The React App](#the-react-app)
   - [Login / Signup Page](#login--signup-page)
-  - [Starting a New Chat or a Group Chat](#starting-a-new-chat-or-a-group-chat)
   - [Sending Messages](#sending-messages)
+  - [Starting a New Chat or a Group Chat](#starting-a-new-chat-or-a-group-chat)
   - [Updating the User Profile](#updating-the-user-profile)
 - [Redis Data Model](#redis-data-model)
 - [MySQL Persistent Storage Data Model](#mysql-persistent-storage-data-model)
-- [Performance Testing GUI](#performance-testing-gui)
 - [About Us](#about-us)
 
 ---
@@ -79,7 +80,7 @@ Users can update their profile information, including their username, password, 
 
 # Redis Data Model
 
-Text Blob for Redis Data Model
+Redis serves two main functions in this application. First, it manages user authentication tokens. When a user logs in, the system generates a unique token. This token is stored in Redis. The token's key maps to the user's ID. Redis automatically assigns an expiration time (TTL) to this token. For subsequent API requests, the system checks Redis for the token to validate the user's session. Second, Redis caches recent messages. New messages are written to Redis lists. This allows fast retrieval of the latest messages for active chats. A background process later moves these messages from Redis to the MySQL database for long-term storage. This approach enhances performance for common operations.
 
 <img width="1083" alt="Screenshot 2025-05-06 at 3 18 19 PM" src="https://github.com/user-attachments/assets/f12a988f-6ebd-4dc1-bfb8-8fce8748490d" />
 
@@ -87,17 +88,12 @@ Text Blob for Redis Data Model
 
 # MySQL Persistent Storage Data Model
 
-Text Blob for MySQL Storage
+The MySQL database serves as the primary persistent storage for the application. It stores essential data such as user accounts, chat session details, and the complete history of messages. Relationships between users, chats, and messages are also maintained within MySQL. The application uses SQLAlchemy as an Object Relational Mapper (ORM) to define data models and interact with the database. Flask-Migrate manages database schema changes over time. This setup ensures data durability and allows for structured querying of information. Figure 2 below, is the tabular representation of the data model as stored in MySQL for perpetual storage.
 
 <img width="1030" alt="Screenshot 2025-05-06 at 3 15 11 PM" src="https://github.com/user-attachments/assets/6d033488-acb3-409f-804f-087d7854811f" />
 
 ---
 
-# Performance Testing GUI
-
-Text Blob and Pictures
-
----
 
 # About Us
 
